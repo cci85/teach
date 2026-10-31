@@ -68,5 +68,5 @@ function note2() {
 MODULES["2"] = {
   build: build2, note: note2,
   empty: "（請先貼上要深化的講義段落）",
-  next: "下一步：回到寫出這份講義的同一個 NotebookLM 對話貼上（不要開新對話），再用輸出的段落替換講義原段落。"
+  next: "下一步：回到寫出這份講義的同一個 NotebookLM 對話貼上（不要開新對話），再用輸出的段落替換講義原段落。" + NOTION_HINT
 };

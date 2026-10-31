@@ -33,4 +33,4 @@ function buildDiscussion() {
   ].join("\n");
 }
 
-MODULES["3"] = { build: buildDiscussion, next: "下一步：回到同一個 NotebookLM 對話貼上（不要開新對話）。" };
+MODULES["3"] = { build: buildDiscussion, next: "下一步：回到同一個 NotebookLM 對話貼上（不要開新對話）。" + NOTION_HINT };
