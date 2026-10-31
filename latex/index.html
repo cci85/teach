@@ -78,15 +78,19 @@ button:disabled { opacity: .45; cursor: default; }
 if (window.self !== window.top || new URLSearchParams(location.search).get("embed")) document.body.classList.add("embed");
 const $ = id => document.getElementById(id);
 
-// 公式內部：還原 Markdown 跳脫字元（\_ \* \#），並把換行壓成空白
-const clean = s => s.replace(/\\([_*#])/g, "$1").replace(/\s*\n\s*/g, " ").trim();
+// NotebookLM 的複製結果有時會把反斜線再跳脫一次（\\( … \\)），因此分隔符號允許 1–2 個反斜線
+// 公式內部：若分隔符號被跳脫過，先把 \\ 還原成 \；再還原 Markdown 跳脫字元（\_ \* \#），並把換行壓成空白
+const clean = (s, doubled) => (doubled ? s.replace(/\\\\/g, "\\") : s)
+  .replace(/\\([_*#])/g, "$1").replace(/\s*\n\s*/g, " ").trim();
 
 function convert(text) {
   let n = 0;
   // 獨立公式 \[ … \]（可跨行）→ 單獨一行的 $$ … $$
-  text = text.replace(/[ \t]*\\\[([\s\S]+?)\\\][ \t]*/g, (_, m) => { n++; return `\n$$${clean(m)}$$\n`; });
+  text = text.replace(/[ \t]*(\\{1,2})\[([\s\S]+?)\1\][ \t]*/g,
+    (_, b, m) => { n++; return `\n$$${clean(m, b.length === 2)}$$\n`; });
   // 行內公式 \( … \) → $ … $
-  text = text.replace(/\\\(([\s\S]+?)\\\)/g, (_, m) => { n++; return `$${clean(m)}$`; });
+  text = text.replace(/(\\{1,2})\(([\s\S]+?)\1\)/g,
+    (_, b, m) => { n++; return `$${clean(m, b.length === 2)}$`; });
   return { text: text.replace(/\n{3,}/g, "\n\n"), n };
 }
 
