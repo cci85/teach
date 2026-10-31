@@ -90,6 +90,9 @@ const NAV = [
           note: "接在「規劃單元」同一個 NotebookLM 對話；貼上講義邊界速查，選一個子主題並調整講義結構。" },
         { label: "深化既有段落", src: "prompt-generator/?embed=1&m=2",
           note: "講義寫好後使用：從講義複製想展開的 ### 區塊，選擇深化方向，產出可直接替換的段落。" }] },
+    { id: "latex", title: "公式轉換", desc: "把 NotebookLM 複製下來的公式，轉成 Notion 擴充功能 noeqtion 可一鍵轉換的格式。",
+      steps: [{ label: "公式轉換", src: "latex/?embed=1",
+        note: "在 NotebookLM 回答下方按「複製」貼到左欄，複製右欄結果貼到 Notion 網頁版，再按 Ctrl+Alt+M。" }] },
     { id: "activity", title: "課堂活動", desc: "依講義內容設計課堂上的小組討論。",
       steps: [{ label: "小組討論題", src: "prompt-generator/?embed=1&m=3",
         note: "接在寫出講義的同一個 NotebookLM 對話，不需要重貼講義。" }] }

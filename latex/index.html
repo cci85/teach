@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>公式轉換</title>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --text: #1f2328; --muted: #6b6f76;
+  --line: #dcdad3; --accent: #2f6f62; --accent-soft: #e3efec;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17191c; --panel: #1f2226; --text: #e6e6e3; --muted: #9a9ea5;
+    --line: #33373d; --accent: #6cbfae; --accent-soft: #233631;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17191c; --panel: #1f2226; --text: #e6e6e3; --muted: #9a9ea5;
+  --line: #33373d; --accent: #6cbfae; --accent-soft: #233631;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.6 "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+}
+.toolbox-back { display: block; padding: 10px 16px; font-size: 14px; border-bottom: 1px solid var(--line); }
+.toolbox-back a { color: var(--accent); text-decoration: none; }
+.embed .toolbox-back, .embed header { display: none; }
+header { padding: 20px 16px 8px; max-width: 1280px; margin: 0 auto; }
+header h1 { margin: 0; font-size: 20px; }
+header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+main {
+  max-width: 1280px; margin: 0 auto; padding: 16px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px;
+}
+@media (max-width: 860px) { main { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; }
+.bar b { font-size: 15px; }
+.bar span { color: var(--muted); font-size: 13px; }
+textarea {
+  width: 100%; min-height: 420px; resize: vertical; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text);
+  font: 13px/1.7 var(--mono);
+}
+button {
+  border: 1px solid var(--accent); background: var(--accent); color: var(--panel);
+  padding: 8px 16px; border-radius: 8px; cursor: pointer; font: inherit; font-weight: 600;
+}
+button.ghost { background: transparent; color: var(--accent); }
+button:disabled { opacity: .45; cursor: default; }
+.btns { display: flex; gap: 8px; }
+.note { color: var(--muted); font-size: 13px; margin: 0; }
+</style>
+</head>
+<body>
+<nav class="toolbox-back"><a href="../">← 回教學工具箱</a></nav>
+<header>
+  <h1>公式轉換</h1>
+  <p>把 NotebookLM 複製下來的 \( … \) 與 \[ … \] 公式，轉成 Notion 擴充功能 noeqtion 可轉換的 $ … $ 與 $$ … $$。轉換在瀏覽器中完成，不會上傳。</p>
+</header>
+<main>
+  <section class="panel">
+    <div class="bar"><b>1　貼上 NotebookLM 的回答</b><button class="ghost" id="clear">清除</button></div>
+    <textarea id="src" placeholder="在 NotebookLM 回答下方按「複製」，再貼到這裡。"></textarea>
+  </section>
+  <section class="panel">
+    <div class="bar"><b>2　複製轉換結果</b><span id="count"></span>
+      <div class="btns"><button id="copy" disabled>複製結果</button></div></div>
+    <textarea id="out" readonly placeholder="轉換結果會即時顯示在這裡。"></textarea>
+    <p class="note">貼到 Notion 網頁版後，按 Ctrl+Alt+M，noeqtion 會把整頁公式一次轉成 Notion 公式。</p>
+  </section>
+</main>
+<script>
+if (window.self !== window.top || new URLSearchParams(location.search).get("embed")) document.body.classList.add("embed");
+const $ = id => document.getElementById(id);
+
+// 公式內部：還原 Markdown 跳脫字元（\_ \* \#），並把換行壓成空白
+const clean = s => s.replace(/\\([_*#])/g, "$1").replace(/\s*\n\s*/g, " ").trim();
+
+function convert(text) {
+  let n = 0;
+  // 獨立公式 \[ … \]（可跨行）→ 單獨一行的 $$ … $$
+  text = text.replace(/[ \t]*\\\[([\s\S]+?)\\\][ \t]*/g, (_, m) => { n++; return `\n$$${clean(m)}$$\n`; });
+  // 行內公式 \( … \) → $ … $
+  text = text.replace(/\\\(([\s\S]+?)\\\)/g, (_, m) => { n++; return `$${clean(m)}$`; });
+  return { text: text.replace(/\n{3,}/g, "\n\n"), n };
+}
+
+function update() {
+  const src = $("src").value;
+  const { text, n } = convert(src);
+  $("out").value = src ? text : "";
+  $("count").textContent = src ? `轉換 ${n} 個公式` : "";
+  $("copy").disabled = !src;
+}
+
+$("src").addEventListener("input", update);
+$("clear").addEventListener("click", () => { $("src").value = ""; update(); $("src").focus(); });
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("out").value); }
+  catch { $("out").select(); document.execCommand("copy"); }
+  $("copy").textContent = "已複製";
+  setTimeout(() => ($("copy").textContent = "複製結果"), 1500);
+});
+update();
+</script>
+</body>
+</html>
