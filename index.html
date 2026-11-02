@@ -47,6 +47,9 @@
   ol.steps button b{font-family:var(--mono);margin-right:6px}
   ol.steps button.on{background:var(--accent);border-color:var(--accent);color:#fff}
   p.stepnote{margin:10px 0 0;padding:8px 12px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14px;color:var(--ink)}
+  a.extlink{display:inline-block;margin-top:10px;background:var(--accent);color:#fff;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:14.5px;font-weight:600}
+  a.extlink:hover{background:var(--accent-strong)}
+  iframe#view[hidden]{display:none}
   iframe#view{width:100%;height:calc(100vh - 120px);min-height:520px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
   footer{max-width:1600px;margin:0 auto;padding:0 16px 20px;color:var(--ink-faint);font-size:12.5px}
   @media (max-width:860px){
@@ -78,7 +81,11 @@ const NAV = [
     { id: "grades", title: "成績登錄器", desc: "貼上名冊與作答紀錄，依選項給分並合併成一個分數欄，可複製或匯出 CSV。",
       steps: [{ label: "成績登錄器", src: "grades/" }] },
     { id: "aiken", title: "Aiken 轉換器", desc: "把 Word、txt 或貼上的選擇題，轉成 Moodle 匯入用的 Aiken 格式。",
-      steps: [{ label: "Aiken 轉換器", src: "aiken/" }] }
+      steps: [{ label: "Aiken 轉換器", src: "aiken/" }] },
+    { id: "submit", title: "作業繳交", desc: "管理各班作業繳交：建立班級、設定作業名稱與說明、產生學生上傳網址。",
+      link: "https://script.google.com/macros/s/AKfycby-dfoPJq6YtKdmQ15cMu_A6swQQlMGwvzivn8WAQfVLCvx7ToNIjjyGpjLwLUeQhO2/exec?page=admin",
+      steps: [{ label: "作業繳交後台",
+        note: "後台會在新分頁開啟。若瀏覽器同時登入多個 Google 帳號而無法登入，請在按鈕上按右鍵，選「在無痕式視窗中開啟連結」。" }] }
   ] },
   { ch: "備課", items: [
     { id: "plan", title: "規劃單元", desc: "把教材切成彼此不重疊的子主題，決定這個單元要寫幾份講義。",
@@ -118,7 +125,10 @@ function render() {
   $("sechead").innerHTML = `<h2>${esc(it.title)}</h2><p>${esc(it.desc)}</p>` +
     (it.steps.length > 1 ? `<ol class="steps">${it.steps.map((s, j) =>
       `<li><button data-step="${j}" class="${j === k ? "on" : ""}"><b>${j + 1}</b>${esc(s.label)}</button></li>`).join("")}</ol>` : "") +
-    (st.note ? `<p class="stepnote">${esc(st.note)}</p>` : "");
+    (st.note ? `<p class="stepnote">${esc(st.note)}</p>` : "") +
+    (it.link ? `<p><a class="extlink" href="${esc(it.link)}" target="_blank" rel="noopener">開啟${esc(it.title)}後台 ↗</a></p>` : "");
+  $("view").hidden = !!it.link;
+  if (it.link) { save(); return; }
   if ($("view").getAttribute("src") !== st.src) $("view").setAttribute("src", st.src);
   $("view").title = st.label;
   save();
