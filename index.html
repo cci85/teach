@@ -82,7 +82,7 @@ const NAV = [
       steps: [{ label: "成績登錄器", src: "grades/" }] },
     { id: "aiken", title: "Aiken 轉換器", desc: "把 Word、txt 或貼上的選擇題，轉成 Moodle 匯入用的 Aiken 格式。",
       steps: [{ label: "Aiken 轉換器", src: "aiken/" }] },
-    { id: "submit", title: "作業繳交", desc: "管理各班作業繳交：建立班級、設定作業名稱與說明、產生學生上傳網址。",
+    { id: "submit", title: "作業繳交後台", desc: "管理各班作業繳交：建立班級、設定作業名稱與說明、產生學生上傳網址。",
       link: "https://script.google.com/macros/s/AKfycby-dfoPJq6YtKdmQ15cMu_A6swQQlMGwvzivn8WAQfVLCvx7ToNIjjyGpjLwLUeQhO2/exec?page=admin",
       steps: [{ label: "作業繳交後台",
         note: "後台會在新分頁開啟。若瀏覽器同時登入多個 Google 帳號而無法登入，請在按鈕上按右鍵，選「在無痕式視窗中開啟連結」。" }] }
@@ -126,7 +126,7 @@ function render() {
     (it.steps.length > 1 ? `<ol class="steps">${it.steps.map((s, j) =>
       `<li><button data-step="${j}" class="${j === k ? "on" : ""}"><b>${j + 1}</b>${esc(s.label)}</button></li>`).join("")}</ol>` : "") +
     (st.note ? `<p class="stepnote">${esc(st.note)}</p>` : "") +
-    (it.link ? `<p><a class="extlink" href="${esc(it.link)}" target="_blank" rel="noopener">開啟${esc(it.title)}後台 ↗</a></p>` : "");
+    (it.link ? `<p><a class="extlink" href="${esc(it.link)}" target="_blank" rel="noopener">開啟${esc(it.title)} ↗</a></p>` : "");
   $("view").hidden = !!it.link;
   if (it.link) { save(); return; }
   if ($("view").getAttribute("src") !== st.src) $("view").setAttribute("src", st.src);
