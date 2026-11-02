@@ -47,6 +47,7 @@
   ol.steps button b{font-family:var(--mono);margin-right:6px}
   ol.steps button.on{background:var(--accent);border-color:var(--accent);color:#fff}
   p.stepnote{margin:10px 0 0;padding:8px 12px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14px;color:var(--ink)}
+  p.extlinks{display:flex;flex-wrap:wrap;gap:8px}
   a.extlink{display:inline-block;margin-top:10px;background:var(--accent);color:#fff;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:14.5px;font-weight:600}
   a.extlink:hover{background:var(--accent-strong)}
   iframe#view[hidden]{display:none}
@@ -83,7 +84,9 @@ const NAV = [
     { id: "aiken", title: "Aiken 轉換器", desc: "把 Word、txt 或貼上的選擇題，轉成 Moodle 匯入用的 Aiken 格式。",
       steps: [{ label: "Aiken 轉換器", src: "aiken/" }] },
     { id: "submit", title: "作業繳交後台", desc: "管理各班作業繳交：建立班級、設定作業名稱與說明、產生學生上傳網址。",
-      link: "https://script.google.com/macros/s/AKfycby-dfoPJq6YtKdmQ15cMu_A6swQQlMGwvzivn8WAQfVLCvx7ToNIjjyGpjLwLUeQhO2/exec?page=admin",
+      links: [
+        { label: "開啟作業繳交後台", href: "https://script.google.com/macros/s/AKfycby-dfoPJq6YtKdmQ15cMu_A6swQQlMGwvzivn8WAQfVLCvx7ToNIjjyGpjLwLUeQhO2/exec?page=admin" },
+        { label: "作業檢視（Google Drive）", href: "https://drive.google.com/drive/folders/1TvYphbOlp-JqjF5r1BQRGBCDtVBJOSTe" }],
       steps: [{ label: "作業繳交後台",
         note: "後台會在新分頁開啟。若瀏覽器同時登入多個 Google 帳號而無法登入，請在按鈕上按右鍵，選「在無痕式視窗中開啟連結」。" }] }
   ] },
@@ -126,9 +129,10 @@ function render() {
     (it.steps.length > 1 ? `<ol class="steps">${it.steps.map((s, j) =>
       `<li><button data-step="${j}" class="${j === k ? "on" : ""}"><b>${j + 1}</b>${esc(s.label)}</button></li>`).join("")}</ol>` : "") +
     (st.note ? `<p class="stepnote">${esc(st.note)}</p>` : "") +
-    (it.link ? `<p><a class="extlink" href="${esc(it.link)}" target="_blank" rel="noopener">開啟${esc(it.title)} ↗</a></p>` : "");
-  $("view").hidden = !!it.link;
-  if (it.link) { save(); return; }
+    (it.links ? `<p class="extlinks">${it.links.map(l =>
+      `<a class="extlink" href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join("")}</p>` : "");
+  $("view").hidden = !!it.links;
+  if (it.links) { save(); return; }
   if ($("view").getAttribute("src") !== st.src) $("view").setAttribute("src", st.src);
   $("view").title = st.label;
   save();
