@@ -37,7 +37,15 @@
   #toc button:hover{background:var(--bg)}
   #toc button.on{background:var(--accent-soft);color:var(--accent-strong);font-weight:600}
   .work{display:flex;flex-direction:column;gap:10px;min-width:0}
-  #sechead{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px}
+  #sechead{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px}
+  #secinfo{flex:1 1 320px;min-width:0}
+  /* 工具頁（iframe）可透過 postMessage 在標題列右側放一列操作按鈕，例如測驗格式轉換的挑題列 */
+  #toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  #toolbar[hidden]{display:none}
+  #toolbar .lbl{font-size:14.5px;font-weight:600;margin-right:4px}
+  #toolbar .lbl b{color:var(--accent);font-family:var(--mono);font-variant-numeric:tabular-nums}
+  #toolbar button{border:1px solid var(--border);background:var(--surface);color:var(--ink);padding:5px 12px;border-radius:8px;cursor:pointer;font:inherit;font-size:13.5px}
+  #toolbar button:hover{border-color:var(--accent);color:var(--accent-strong)}
   #sechead h2{margin:0;font-size:18px}
   #sechead p{margin:2px 0 0;color:var(--ink-soft);font-size:13.5px}
   ol.steps{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
@@ -69,7 +77,7 @@
 <div class="layout">
   <aside id="toc" aria-label="工具目錄"></aside>
   <div class="work">
-    <section id="sechead"></section>
+    <section id="sechead"><div id="secinfo"></div><div id="toolbar" hidden></div></section>
     <iframe id="view" title="工具"></iframe>
   </div>
 </div>
@@ -125,18 +133,39 @@ function render() {
     g.items.map(i => `<button data-item="${i.id}" class="${i.id === state.item ? "on" : ""}">${esc(i.title)}</button>`).join("") +
     `</details>`).join("");
   const it = item(), k = stepIdx(), st = it.steps[k];
-  $("sechead").innerHTML = `<h2>${esc(it.title)}</h2><p>${esc(it.desc)}</p>` +
+  $("secinfo").innerHTML = `<h2>${esc(it.title)}</h2><p>${esc(it.desc)}</p>` +
     (it.steps.length > 1 ? `<ol class="steps">${it.steps.map((s, j) =>
       `<li><button data-step="${j}" class="${j === k ? "on" : ""}"><b>${j + 1}</b>${esc(s.label)}</button></li>`).join("")}</ol>` : "") +
     (st.note ? `<p class="stepnote">${esc(st.note)}</p>` : "") +
     (it.links ? `<p class="extlinks">${it.links.map(l =>
       `<a class="extlink" href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join("")}</p>` : "");
   $("view").hidden = !!it.links;
-  if (it.links) { save(); return; }
-  if ($("view").getAttribute("src") !== st.src) $("view").setAttribute("src", st.src);
+  if (it.links) { clearToolbar(); save(); return; }
+  if ($("view").getAttribute("src") !== st.src) { clearToolbar(); $("view").setAttribute("src", st.src); }
   $("view").title = st.label;
   save();
 }
+
+// ---- 工具頁的標題列操作列 ----
+// 工具頁送來 {type:"teach:toolbar", label:"已選 {n} / 50 題", strong:"50", buttons:[{id,text}], hidden}，
+// 這裡畫在標題列右側並回覆 ack（工具頁收到後就隱藏自己頁內的同一列）；按鈕被按時把 id 傳回工具頁。
+function clearToolbar() { $("toolbar").hidden = true; $("toolbar").innerHTML = ""; }
+window.addEventListener("message", e => {
+  const view = $("view");
+  if (!view || e.source !== view.contentWindow) return;
+  const d = e.data || {};
+  if (d.type !== "teach:toolbar") return;
+  e.source.postMessage({ type: "teach:toolbar-ack" }, "*");
+  if (d.hidden) { clearToolbar(); return; }
+  const lbl = esc(d.label || "").replace("{n}", `<b>${esc(d.strong || "")}</b>`);
+  $("toolbar").innerHTML = `<span class="lbl">${lbl}</span>` +
+    (d.buttons || []).map(b => `<button type="button" data-tb="${esc(b.id)}">${esc(b.text)}</button>`).join("");
+  $("toolbar").hidden = false;
+});
+$("toolbar").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tb]"); if (!b) return;
+  $("view").contentWindow.postMessage({ type: "teach:toolbar-click", id: b.dataset.tb }, "*");
+});
 
 $("toc").addEventListener("click", e => {
   const b = e.target.closest("button[data-item]"); if (!b) return;
