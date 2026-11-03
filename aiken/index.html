@@ -130,7 +130,22 @@
 
   /* question preview */
   .qlist{display:flex; flex-direction:column; gap:14px;}
-  .qcard{border:1px solid var(--border); border-radius:10px; padding:14px 16px;}
+  .qcard{border:1px solid var(--border); border-radius:10px; padding:14px 16px; cursor:pointer; transition:opacity .15s, border-color .15s;}
+  .qcard:hover{border-color:var(--accent);}
+  .qcard.off{opacity:.45;}
+  .qcard .qhead{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .qcard .qhead input{width:17px; height:17px; margin:0; accent-color:var(--accent); cursor:pointer;}
+  .qcard .qnum{font-family:"IBM Plex Mono", monospace; font-size:12.5px; font-weight:600; color:var(--ink-muted);}
+  .qcard .qhead .img-tag{margin:0;}
+  .pickbar{
+    position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    margin-top:16px; padding:10px 12px; background:var(--surface-2); border:1px solid var(--border); border-radius:9px;
+  }
+  .pickbar .count{font-size:13.5px; font-weight:600; margin-right:auto;}
+  .pickbar .count b{font-family:"IBM Plex Mono", monospace; color:var(--accent); font-variant-numeric:tabular-nums;}
+  .btn-sm{font-family:inherit; font-size:12.5px; font-weight:600; padding:5px 11px; border-radius:7px; cursor:pointer;
+    background:var(--surface); color:var(--ink); border:1px solid var(--border);}
+  .btn-sm:hover{border-color:var(--accent);}
   .qcard .stem{font-size:14px; line-height:1.55; margin-bottom:10px;}
   .opts{display:flex; flex-direction:column; gap:6px;}
   .opt{
@@ -177,10 +192,10 @@
   <section class="card">
     <h2>1. 輸入題目</h2>
     <div class="tabs" role="tablist">
-      <button class="tab active" type="button" role="tab" data-tab="file">上傳檔案</button>
-      <button class="tab" type="button" role="tab" data-tab="paste">貼上文字</button>
+      <button class="tab active" type="button" role="tab" data-tab="paste">貼上文字</button>
+      <button class="tab" type="button" role="tab" data-tab="file">上傳檔案</button>
     </div>
-    <div id="panelFile">
+    <div id="panelFile" hidden>
     <label class="dropzone" id="dropzone" for="fileInput">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
       <div class="filename" id="filenameLabel">尚未選擇檔案</div>
@@ -188,7 +203,7 @@
     </label>
     <input type="file" id="fileInput" accept=".docx,.txt">
     </div>
-    <div id="panelPaste" hidden>
+    <div id="panelPaste">
       <textarea id="pasteInput" spellcheck="false" placeholder="把題目文字直接貼在這裡，例如：&#10;題幹……&#10;A) …&#10;B) …&#10;ANSWER: B"></textarea>
     </div>
     <div class="btn-row">
@@ -203,25 +218,30 @@
       <div class="stat good"><div class="n" id="statOk">4</div><div class="label">成功轉換</div></div>
       <div class="stat bad"><div class="n" id="statBad">0</div><div class="label">需要你檢查</div></div>
     </div>
-    <div class="sample-note" id="sampleNote">目前顯示的是範例資料（你先前貼過的市場界定測驗題），上傳自己的 Word 檔後會自動換成你的內容。</div>
+    <div class="sample-note" id="sampleNote">目前顯示的是範例資料（你先前貼過的市場界定測驗題），貼上文字後（或上傳檔案並按「開始轉換」）會自動換成你的內容。</div>
     <div class="warnings" id="warnings" hidden></div>
     <div class="warnings" id="notices" hidden></div>
 
-    <div class="qlist" id="qlist" style="margin-top:16px;"></div>
-    <div class="more-note" id="moreNote" hidden></div>
+    <div class="pickbar" id="pickbar">
+      <span class="count">已選 <b id="selCount">0</b> / <span id="selTotal">0</span> 題</span>
+      <button class="btn-sm" type="button" id="selAll">全選</button>
+      <button class="btn-sm" type="button" id="selNone">全不選</button>
+      <button class="btn-sm" type="button" id="selInvert">反向選取</button>
+    </div>
+    <div class="qlist" id="qlist" style="margin-top:12px;"></div>
   </section>
 
   <section class="card">
-    <h2>3. Aiken 文字內容</h2>
+    <h2>3. Aiken 文字內容（只含已勾選的題目）</h2>
     <textarea id="output" readonly spellcheck="false"></textarea>
     <div class="btn-row">
-      <button class="btn btn-primary" id="copyBtn">複製全部</button>
+      <button class="btn btn-primary" id="copyBtn">複製已選題目</button>
       <button class="btn btn-ghost" id="downloadBtn">下載 .txt（UTF-8）</button>
     </div>
   </section>
 
   <footer>
-    題幹前面的題號（<code>Q1.</code>、<code>1.</code>、<code>1、</code>、<code>(1)</code>、<code>第1題</code> 等）會自動刪除；ANSWER 之後到下一題之前的圖片、表格與文字說明也會一併刪除（題幹以「緊接在選項 A 前面的那一段」辨識）。每一題之間會自動空一行；純文字檔與貼上的文字以「一行」為一段，題幹即選項 A 的前一行。純文字檔可為 UTF-8 或 Big5 編碼。選項一律重新編成 <code>A. B. C. D.</code>、正確答案輸出成 <code>ANSWER: X</code>。原本的 Explanation／詳解內容不會出現在輸出裡。若某一題選項少於兩個、或找不到正確答案標記，會被列在「需要你檢查」，不會混進正式輸出中，請回 Word 檔手動確認後再匯入 Moodle。下載的 <code>.txt</code> 一律是不含 BOM 的 UTF-8，Moodle 匯入前不需要再另存編碼。
+    題幹前面的題號（<code>Q1.</code>、<code>1.</code>、<code>1、</code>、<code>(1)</code>、<code>第1題</code> 等）會自動刪除；ANSWER 之後到下一題之前的圖片、表格與文字說明也會一併刪除（題幹以「緊接在選項 A 前面的那一段」辨識）。每一題之間會自動空一行；純文字檔與貼上的文字以「一行」為一段，題幹即選項 A 的前一行。純文字檔可為 UTF-8 或 Big5 編碼。選項一律重新編成 <code>A. B. C. D.</code>、正確答案輸出成 <code>ANSWER: X</code>。原本的 Explanation／詳解內容不會出現在輸出裡。轉換後所有題目預設全選，可在「轉換結果」逐題勾選或取消（點題目卡片任一處即可切換），下方的 Aiken 文字、複製與下載都只包含已勾選的題目。若某一題選項少於兩個、或找不到正確答案標記，會被列在「需要你檢查」，不會混進正式輸出中，請回 Word 檔手動確認後再匯入 Moodle。下載的 <code>.txt</code> 一律是不含 BOM 的 UTF-8，Moodle 匯入前不需要再另存編碼。
   </footer>
 
 </div>
@@ -499,7 +519,12 @@
     warnings: document.getElementById("warnings"),
     notices: document.getElementById("notices"),
     qlist: document.getElementById("qlist"),
-    moreNote: document.getElementById("moreNote"),
+    pickbar: document.getElementById("pickbar"),
+    selCount: document.getElementById("selCount"),
+    selTotal: document.getElementById("selTotal"),
+    selAll: document.getElementById("selAll"),
+    selNone: document.getElementById("selNone"),
+    selInvert: document.getElementById("selInvert"),
     output: document.getElementById("output"),
     copyBtn: document.getElementById("copyBtn"),
     downloadBtn: document.getElementById("downloadBtn"),
@@ -507,7 +532,8 @@
   };
 
   var state = { questions: sampleQuestions, problems: [], isSample: true };
-  var PREVIEW_CAP = 6;
+  var selected = sampleQuestions.map(function(){ return true; });
+  var reImg = /[(（]\s*圖\s*[)）]/;
 
   function escapeHtml(s){
     return s.replace(/[&<>"']/g, function(c){
@@ -533,13 +559,36 @@
       els.warnings.innerHTML = "";
     }
 
-    // 題幹含「(圖)」的題目照常輸出，只提醒匯入 Moodle 後要手動補圖。
-    var reImg = /[(（]\s*圖\s*[)）]/;
+    els.qlist.innerHTML = state.questions.map(function(q, qi){
+      var opts = q.options.map(function(text, i){
+        var isCorrect = i === q.answerIndex;
+        return '<div class="opt' + (isCorrect ? ' correct' : '') + '"><span class="chip">' + LETTERS[i] + '</span><span>' + escapeHtml(text) + '</span></div>';
+      }).join("");
+      return '<div class="qcard" data-i="' + qi + '"><div class="qhead"><input type="checkbox" aria-label="選取第 ' + (qi + 1) + ' 題"><span class="qnum">第 ' + (qi + 1) + ' 題</span>' +
+        (reImg.test(q.stem) ? '<span class="img-tag">需貼圖</span>' : '') + '</div><div class="stem">' + escapeHtml(q.stem) + '</div><div class="opts">' + opts + '</div></div>';
+    }).join("");
+    els.pickbar.hidden = !state.questions.length;
+    renderSelection();
+  }
+
+  // 勾選狀態改變時只更新勾選框、已選數量、貼圖提醒與輸出，不重畫題目清單（保留捲動位置）。
+  function renderSelection(){
+    var cards = els.qlist.querySelectorAll(".qcard");
+    Array.prototype.forEach.call(cards, function(card){
+      var on = selected[+card.getAttribute("data-i")];
+      card.classList.toggle("off", !on);
+      card.querySelector("input").checked = on;
+    });
+    var picked = state.questions.filter(function(q, i){ return selected[i]; });
+    els.selCount.textContent = picked.length;
+    els.selTotal.textContent = state.questions.length;
+
+    // 題幹含「(圖)」的已選題目照常輸出，只提醒匯入 Moodle 後要手動補圖（題號對應上方清單）。
     var imgList = [];
-    state.questions.forEach(function(q, i){ if (reImg.test(q.stem)) imgList.push({n: i + 1, stem: q.stem}); });
+    state.questions.forEach(function(q, i){ if (selected[i] && reImg.test(q.stem)) imgList.push({n: i + 1, stem: q.stem}); });
     if (imgList.length){
       els.notices.hidden = false;
-      els.notices.innerHTML = '<div class="notice"><b>需貼圖（' + imgList.length + ' 題）：</b>以下題目標有「(圖)」，匯入 Moodle 後請手動補上圖片。</div>' +
+      els.notices.innerHTML = '<div class="notice"><b>需貼圖（' + imgList.length + ' 題）：</b>以下已選題目標有「(圖)」，匯入 Moodle 後請手動補上圖片。</div>' +
         imgList.map(function(p){
           return '<div class="notice"><b>第 ' + p.n + ' 題</b>　「' + escapeHtml(p.stem.slice(0,60)) + (p.stem.length>60?'…':'') + '」</div>';
         }).join("");
@@ -548,24 +597,19 @@
       els.notices.innerHTML = "";
     }
 
-    var shown = state.questions.slice(0, PREVIEW_CAP);
-    els.qlist.innerHTML = shown.map(function(q){
-      var opts = q.options.map(function(text, i){
-        var isCorrect = i === q.answerIndex;
-        return '<div class="opt' + (isCorrect ? ' correct' : '') + '"><span class="chip">' + LETTERS[i] + '</span><span>' + escapeHtml(text) + '</span></div>';
-      }).join("");
-      return '<div class="qcard">' + (reImg.test(q.stem) ? '<span class="img-tag">需貼圖</span>' : '') + '<div class="stem">' + escapeHtml(q.stem) + '</div><div class="opts">' + opts + '</div></div>';
-    }).join("");
-
-    if (state.questions.length > PREVIEW_CAP){
-      els.moreNote.hidden = false;
-      els.moreNote.textContent = "還有 " + (state.questions.length - PREVIEW_CAP) + " 題已包含在下方輸出內容中，這裡只預覽前 " + PREVIEW_CAP + " 題。";
-    } else {
-      els.moreNote.hidden = true;
-    }
-
-    els.output.value = state.questions.length ? toAiken(state.questions) : "";
+    els.output.value = picked.length ? toAiken(picked) : "";
   }
+
+  els.qlist.addEventListener("click", function(e){
+    var card = e.target.closest(".qcard");
+    if (!card) return;
+    var i = +card.getAttribute("data-i");
+    selected[i] = e.target.tagName === "INPUT" ? e.target.checked : !selected[i];
+    renderSelection();
+  });
+  els.selAll.addEventListener("click", function(){ selected = selected.map(function(){ return true; }); renderSelection(); });
+  els.selNone.addEventListener("click", function(){ selected = selected.map(function(){ return false; }); renderSelection(); });
+  els.selInvert.addEventListener("click", function(){ selected = selected.map(function(v){ return !v; }); renderSelection(); });
 
   function showToast(msg){
     els.toast.textContent = msg;
@@ -588,7 +632,7 @@
     updateConvertBtn();
   }
 
-  var activeTab = "file";
+  var activeTab = "paste";
   var pasteInput = document.getElementById("pasteInput");
   var panels = {file: document.getElementById("panelFile"), paste: document.getElementById("panelPaste")};
   function updateConvertBtn(){
@@ -603,7 +647,14 @@
       updateConvertBtn();
     });
   });
-  pasteInput.addEventListener("input", updateConvertBtn);
+  // 貼上文字後不必再按「開始轉換」：停止輸入約半秒就自動轉換。
+  var pasteTimer = null;
+  pasteInput.addEventListener("input", function(){
+    updateConvertBtn();
+    clearTimeout(pasteTimer);
+    if (!pasteInput.value.trim()) return;
+    pasteTimer = setTimeout(function(){ els.convertBtn.click(); }, 500);
+  });
 
   els.fileInput.addEventListener("change", function(e){
     setFile(e.target.files && e.target.files[0]);
@@ -641,6 +692,7 @@
     job.then(function(lines){
       var parsed = parseAiken(lines);
       state = {questions: parsed.questions, problems: parsed.problems, isSample: false};
+      selected = parsed.questions.map(function(){ return true; });
       render();
       showToast("轉換完成：" + parsed.questions.length + " 題成功");
     }).catch(function(err){
@@ -655,7 +707,7 @@
   // ---- copy / download ----
   els.copyBtn.addEventListener("click", function(){
     var text = els.output.value;
-    if (!text){ showToast("目前沒有內容可複製"); return; }
+    if (!text){ showToast("目前沒有勾選任何題目"); return; }
     var done = function(){ showToast("已複製到剪貼簿"); };
     var fail = function(){
       els.output.removeAttribute("readonly");
@@ -674,7 +726,7 @@
 
   els.downloadBtn.addEventListener("click", function(){
     var text = els.output.value;
-    if (!text){ showToast("目前沒有內容可下載"); return; }
+    if (!text){ showToast("目前沒有勾選任何題目"); return; }
     var filename = state.isSample ? "aiken_範例.txt" : "aiken_轉換結果.txt";
     try {
       var blob = new Blob([text], {type: "text/plain;charset=utf-8"});
@@ -686,7 +738,7 @@
       showToast("已下載 " + filename);
     } catch (err){
       console.error(err);
-      showToast("下載失敗，請改用「複製全部」");
+      showToast("下載失敗，請改用「複製已選題目」");
     }
   });
 
