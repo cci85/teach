@@ -137,6 +137,18 @@
   .qcard .qhead input{width:17px; height:17px; margin:0; accent-color:var(--accent); cursor:pointer;}
   .qcard .qnum{font-family:"IBM Plex Mono", monospace; font-size:12.5px; font-weight:600; color:var(--ink-muted);}
   .qcard .qhead .img-tag{margin:0;}
+  .qcard .qhead .edit-btn{margin-left:auto;}
+  .qcard .edited-tag{font-size:11.5px; font-weight:600; color:var(--good); background:var(--good-soft); border-radius:5px; padding:1px 7px;}
+  .qcard.editing{cursor:default; border-color:var(--accent); opacity:1;}
+  .editbox textarea{
+    width:100%; min-height:170px; resize:vertical; margin-top:4px;
+    background:var(--surface); color:var(--ink); border:1px solid var(--border);
+    border-radius:8px; padding:10px 12px; font-family:inherit; font-size:13.5px; line-height:1.6;
+  }
+  .editbox textarea:focus{outline:2px solid var(--accent); outline-offset:-1px;}
+  .editbox .edit-hint{font-size:12.5px; color:var(--ink-muted); line-height:1.5;}
+  .editbox .edit-err{font-size:12.5px; color:var(--bad); margin-top:6px;}
+  .editbox .edit-actions{display:flex; gap:8px; margin-top:8px;}
   .pickbar{
     position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
     margin-top:16px; padding:10px 12px; background:var(--surface-2); border:1px solid var(--border); border-radius:9px;
@@ -241,7 +253,7 @@
   </section>
 
   <footer>
-    題幹前面的題號（<code>Q1.</code>、<code>1.</code>、<code>1、</code>、<code>(1)</code>、<code>第1題</code> 等）會自動刪除；ANSWER 之後到下一題之前的圖片、表格與文字說明也會一併刪除（題幹以「緊接在選項 A 前面的那一段」辨識）。每一題之間會自動空一行；純文字檔與貼上的文字以「一行」為一段，題幹即選項 A 的前一行。純文字檔可為 UTF-8 或 Big5 編碼。選項一律重新編成 <code>A. B. C. D.</code>、正確答案輸出成 <code>ANSWER: X</code>。原本的 Explanation／詳解內容不會出現在輸出裡。轉換後所有題目預設全選，可在「轉換結果」逐題勾選或取消（點題目卡片任一處即可切換），下方的 Aiken 文字、複製與下載都只包含已勾選的題目。若某一題選項少於兩個、或找不到正確答案標記，會被列在「需要你檢查」，不會混進正式輸出中，請回 Word 檔手動確認後再匯入 Moodle。下載的 <code>.txt</code> 一律是不含 BOM 的 UTF-8，Moodle 匯入前不需要再另存編碼。
+    題幹前面的題號（<code>Q1.</code>、<code>1.</code>、<code>1、</code>、<code>(1)</code>、<code>第1題</code> 等）會自動刪除；ANSWER 之後到下一題之前的圖片、表格與文字說明也會一併刪除（題幹以「緊接在選項 A 前面的那一段」辨識）。每一題之間會自動空一行；純文字檔與貼上的文字以「一行」為一段，題幹即選項 A 的前一行。純文字檔可為 UTF-8 或 Big5 編碼。選項一律重新編成 <code>A. B. C. D.</code>、正確答案輸出成 <code>ANSWER: X</code>。原本的 Explanation／詳解內容不會出現在輸出裡。每題卡片右上角的「編輯」可原地修改或整題貼上新版本，儲存後依同樣規則重新辨識。轉換後所有題目預設全選，可在「轉換結果」逐題勾選或取消（點題目卡片任一處即可切換），下方的 Aiken 文字、複製與下載都只包含已勾選的題目。若某一題選項少於兩個、或找不到正確答案標記，會被列在「需要你檢查」，不會混進正式輸出中，請回 Word 檔手動確認後再匯入 Moodle。下載的 <code>.txt</code> 一律是不含 BOM 的 UTF-8，Moodle 匯入前不需要再另存編碼。
   </footer>
 
 </div>
@@ -565,7 +577,9 @@
         return '<div class="opt' + (isCorrect ? ' correct' : '') + '"><span class="chip">' + LETTERS[i] + '</span><span>' + escapeHtml(text) + '</span></div>';
       }).join("");
       return '<div class="qcard" data-i="' + qi + '"><div class="qhead"><input type="checkbox" aria-label="選取第 ' + (qi + 1) + ' 題"><span class="qnum">第 ' + (qi + 1) + ' 題</span>' +
-        (reImg.test(q.stem) ? '<span class="img-tag">需貼圖</span>' : '') + '</div><div class="stem">' + escapeHtml(q.stem) + '</div><div class="opts">' + opts + '</div></div>';
+        (reImg.test(q.stem) ? '<span class="img-tag">需貼圖</span>' : '') +
+        (q.edited ? '<span class="edited-tag">已修改</span>' : '') +
+        '<button class="btn-sm edit-btn" type="button">編輯</button></div><div class="stem">' + escapeHtml(q.stem) + '</div><div class="opts">' + opts + '</div></div>';
     }).join("");
     els.pickbar.hidden = !state.questions.length;
     renderSelection();
@@ -600,9 +614,53 @@
     els.output.value = picked.length ? toAiken(picked) : "";
   }
 
+  // ---- 原地修改：把整題轉成文字讓使用者貼上新版本，再用同一套規則重新辨識 ----
+  function questionToText(q){
+    return [q.stem].concat(q.options.map(function(t, i){ return LETTERS[i] + ") " + t; }), ["ANSWER: " + LETTERS[q.answerIndex]]).join("\n");
+  }
+
+  function openEditor(card){
+    var i = +card.getAttribute("data-i");
+    card.classList.add("editing");
+    card.innerHTML = '<div class="qhead"><span class="qnum">第 ' + (i + 1) + ' 題・編輯中</span></div>' +
+      '<div class="editbox"><div class="edit-hint">直接修改，或整段貼上新版本（題幹一行、A) B) C) D) 選項各一行、最後一行 ANSWER: 字母）。Ctrl+Enter 儲存，Esc 取消。</div>' +
+      '<textarea spellcheck="false"></textarea><div class="edit-err" hidden></div>' +
+      '<div class="edit-actions"><button class="btn btn-primary edit-save" type="button">儲存</button><button class="btn btn-ghost edit-cancel" type="button">取消</button></div></div>';
+    var ta = card.querySelector("textarea");
+    ta.value = questionToText(state.questions[i]);
+    ta.focus();
+    ta.addEventListener("keydown", function(e){
+      if (e.key === "Escape"){ e.preventDefault(); render(); }
+      else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); saveEditor(card); }
+    });
+  }
+
+  function saveEditor(card){
+    var i = +card.getAttribute("data-i");
+    var err = card.querySelector(".edit-err");
+    var parsed = parseAiken(textToLines(card.querySelector("textarea").value));
+    var total = parsed.questions.length + parsed.problems.length;
+    var msg = "";
+    if (total === 0) msg = "沒有讀到任何內容。";
+    else if (total > 1) msg = "偵測到 " + total + " 題，這裡一次只能放一題。";
+    else if (parsed.problems.length) msg = "無法辨識：" + parsed.problems[0].reason + "。";
+    if (msg){ err.textContent = msg; err.hidden = false; return; }
+    var q = parsed.questions[0];
+    q.edited = true;
+    state.questions[i] = q;
+    render();
+    showToast("第 " + (i + 1) + " 題已更新");
+  }
+
   els.qlist.addEventListener("click", function(e){
     var card = e.target.closest(".qcard");
     if (!card) return;
+    if (card.classList.contains("editing")){
+      if (e.target.closest(".edit-save")) saveEditor(card);
+      else if (e.target.closest(".edit-cancel")) render();
+      return;
+    }
+    if (e.target.closest(".edit-btn")){ openEditor(card); return; }
     var i = +card.getAttribute("data-i");
     selected[i] = e.target.tagName === "INPUT" ? e.target.checked : !selected[i];
     renderSelection();
