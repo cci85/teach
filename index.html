@@ -89,8 +89,8 @@ const NAV = [
   { ch: "課堂管理", items: [
     { id: "grades", title: "成績登錄器", desc: "貼上名冊與作答紀錄，依選項給分並合併成一個分數欄，可複製或匯出 CSV。",
       steps: [{ label: "成績登錄器", src: "grades/" }] },
-    { id: "aiken", title: "測驗格式轉換", desc: "把選擇題轉成 Moodle 匯入用的 Aiken 格式，或把填空題轉成 Moodle 克漏字（Cloze）。",
-      steps: [{ label: "選擇題（Aiken）", src: "aiken/" },
+    { id: "aiken", title: "測驗格式轉換", desc: "把選擇題轉成 Moodle 匯入用的 Aiken 或 Moodle XML 格式（XML 可先指定配分），或把填空題轉成 Moodle 克漏字（Cloze）。",
+      steps: [{ label: "選擇題（Aiken／XML）", src: "aiken/" },
               { label: "填空題（克漏字）", src: "cloze/",
                 note: "貼上填空題文字，逐格填答案與配分，複製結果貼進 Moodle「克漏字」題目的內容欄。" }] },
     { id: "submit", title: "作業繳交後台", desc: "管理各班作業繳交：建立班級、設定作業名稱與說明、產生學生上傳網址。",

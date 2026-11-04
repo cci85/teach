@@ -138,6 +138,17 @@
   .qcard .qnum{font-family:"IBM Plex Mono", monospace; font-size:12.5px; font-weight:600; color:var(--ink-muted);}
   .qcard .qhead .img-tag{margin:0;}
   .qcard .qhead .edit-btn{margin-left:auto;}
+  .qcard .mark{display:inline-flex; align-items:center; gap:5px; font-size:12.5px; color:var(--ink-muted); margin-left:auto; cursor:default;}
+  .qcard .mark + .edit-btn{margin-left:0;}
+  .qcard .mark input, .fmt-opts input[type=number]{
+    width:64px; height:auto; padding:4px 7px; font-family:"IBM Plex Mono", monospace; font-size:12.5px;
+    background:var(--surface); color:var(--ink); border:1px solid var(--border); border-radius:6px; cursor:text;
+  }
+  .qcard .mark input:focus, .fmt-opts input[type=number]:focus{outline:2px solid var(--accent); outline-offset:-1px;}
+  .fmt-opts{display:flex; align-items:center; gap:8px 18px; flex-wrap:wrap; font-size:13.5px; margin-top:4px;}
+  .fmt-opts label{display:inline-flex; align-items:center; gap:6px;}
+  .fmt-opts input[type=checkbox]{width:16px; height:16px; margin:0; accent-color:var(--accent);}
+  .fmt-hint{font-size:12.5px; color:var(--ink-muted); line-height:1.6; margin-top:8px;}
   .qcard .edited-tag{font-size:11.5px; font-weight:600; color:var(--good); background:var(--good-soft); border-radius:5px; padding:1px 7px;}
   .qcard.editing{cursor:default; border-color:var(--accent); opacity:1;}
   .editbox textarea{
@@ -198,7 +209,7 @@
   <header>
     <div class="eyebrow">Word → Moodle 匯入格式</div>
     <h1>測驗格式轉換</h1>
-    <p>上傳含選擇題的 Word 檔或純文字檔，或直接貼上文字，自動整理成 Moodle 可直接匯入的 Aiken 格式：去掉題號、統一選項標號、拿掉 Explanation，只留下 Moodle 讀得懂的部分。</p>
+    <p>上傳含選擇題的 Word 檔或純文字檔，或直接貼上文字，自動整理成 Moodle 可直接匯入的 Aiken 或 Moodle XML 格式：去掉題號、統一選項標號、拿掉 Explanation，只留下 Moodle 讀得懂的部分。需要事先指定配分時，請選 Moodle XML。</p>
   </header>
 
   <section class="card">
@@ -244,7 +255,18 @@
   </section>
 
   <section class="card">
-    <h2>3. Aiken 文字內容（只含已勾選的題目）</h2>
+    <h2 id="outTitle">3. 輸出內容（只含已勾選的題目）</h2>
+    <div class="tabs" role="tablist" id="fmtTabs">
+      <button class="tab active" type="button" role="tab" data-fmt="aiken">Aiken（.txt）</button>
+      <button class="tab" type="button" role="tab" data-fmt="xml">Moodle XML（.xml，可指定配分）</button>
+    </div>
+    <div id="xmlOpts" hidden>
+      <div class="fmt-opts">
+        <label>每題預設分數 <input type="number" id="defaultMark" min="0" step="0.5" value="1"></label>
+        <label><input type="checkbox" id="shuffleOpt" checked> 選項隨機排列</label>
+      </div>
+      <div class="fmt-hint">個別題目要不同分數時，在上方題目卡片的「分數」欄填寫；留空就用預設分數。這裡的分數會成為題目的「預設分數」，加入測驗時自動帶入。匯入時請在 Moodle 題庫「匯入」選擇「Moodle XML 格式」。</div>
+    </div>
     <textarea id="output" readonly spellcheck="false"></textarea>
     <div class="btn-row">
       <button class="btn btn-primary" id="copyBtn">複製已選題目</button>
@@ -253,7 +275,7 @@
   </section>
 
   <footer>
-    題幹前面的題號（<code>Q1.</code>、<code>1.</code>、<code>1、</code>、<code>(1)</code>、<code>第1題</code> 等）會自動刪除；ANSWER 之後到下一題之前的圖片、表格與文字說明也會一併刪除（題幹以「緊接在選項 A 前面的那一段」辨識）。每一題之間會自動空一行；純文字檔與貼上的文字以「一行」為一段，題幹即選項 A 的前一行。純文字檔可為 UTF-8 或 Big5 編碼。選項一律重新編成 <code>A. B. C. D.</code>、正確答案輸出成 <code>ANSWER: X</code>。原本的 Explanation／詳解內容不會出現在輸出裡。題目與選項中的「變項」一律自動改為「變數」（自變項、依變項、中介變項、調節變項等複合詞同樣適用）。每題卡片右上角的「編輯」可原地修改或整題貼上新版本，儲存後依同樣規則重新辨識。轉換後所有題目預設全選，可在「轉換結果」逐題勾選或取消（點題目卡片任一處即可切換），下方的 Aiken 文字、複製與下載都只包含已勾選的題目。若某一題選項少於兩個、或找不到正確答案標記，會被列在「需要你檢查」，不會混進正式輸出中，請回 Word 檔手動確認後再匯入 Moodle。下載的 <code>.txt</code> 一律是不含 BOM 的 UTF-8，Moodle 匯入前不需要再另存編碼。
+    題幹前面的題號（<code>Q1.</code>、<code>1.</code>、<code>1、</code>、<code>(1)</code>、<code>第1題</code> 等）會自動刪除；ANSWER 之後到下一題之前的圖片、表格與文字說明也會一併刪除（題幹以「緊接在選項 A 前面的那一段」辨識）。每一題之間會自動空一行；純文字檔與貼上的文字以「一行」為一段，題幹即選項 A 的前一行。純文字檔可為 UTF-8 或 Big5 編碼。選項一律重新編成 <code>A. B. C. D.</code>、正確答案輸出成 <code>ANSWER: X</code>。原本的 Explanation／詳解內容不會出現在輸出裡。題目與選項中的「變項」一律自動改為「變數」（自變項、依變項、中介變項、調節變項等複合詞同樣適用）。每題卡片右上角的「編輯」可原地修改或整題貼上新版本，儲存後依同樣規則重新辨識。轉換後所有題目預設全選，可在「轉換結果」逐題勾選或取消（點題目卡片任一處即可切換），下方的輸出內容、複製與下載都只包含已勾選的題目。若某一題選項少於兩個、或找不到正確答案標記，會被列在「需要你檢查」，不會混進正式輸出中，請回 Word 檔手動確認後再匯入 Moodle。下載的 <code>.txt</code> 與 <code>.xml</code> 一律是不含 BOM 的 UTF-8，Moodle 匯入前不需要再另存編碼。Aiken 格式無法記錄分數，匯入後每題都是 1 分；改選 Moodle XML 可先設定每題預設分數（也可逐題指定），並決定選項是否隨機排列，選項編號為 A. B. C. D.。
   </footer>
 
 </div>
@@ -520,6 +542,52 @@
     }).join("\n\n") + "\n";
   }
 
+  function escXml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&apos;"}[c];
+    });
+  }
+  // 題目內容一律先轉義再放進 CDATA，因此內文不可能出現「]]>」。
+  function cdata(s){ return "<![CDATA[" + escapeHtml(s) + "]]>"; }
+
+  function getDefaultMark(){
+    var v = parseFloat(document.getElementById("defaultMark").value);
+    return isFinite(v) && v >= 0 ? v : 1;
+  }
+  function markOf(q){
+    return (typeof q.mark === "number" && isFinite(q.mark) && q.mark >= 0) ? q.mark : getDefaultMark();
+  }
+
+  function toMoodleXml(questions){
+    var shuffle = document.getElementById("shuffleOpt").checked;
+    var out = ['<?xml version="1.0" encoding="UTF-8"?>', '<quiz>'];
+    questions.forEach(function(q){
+      var name = q.stem.length > 250 ? q.stem.slice(0, 250) : q.stem;
+      out.push('  <question type="multichoice">');
+      out.push('    <name><text>' + escXml(name) + '</text></name>');
+      out.push('    <questiontext format="html"><text>' + cdata(q.stem) + '</text></questiontext>');
+      out.push('    <generalfeedback format="html"><text></text></generalfeedback>');
+      out.push('    <defaultgrade>' + markOf(q) + '</defaultgrade>');
+      out.push('    <penalty>0.3333333</penalty>');
+      out.push('    <hidden>0</hidden>');
+      out.push('    <single>true</single>');
+      out.push('    <shuffleanswers>' + (shuffle ? 'true' : 'false') + '</shuffleanswers>');
+      out.push('    <answernumbering>ABCD</answernumbering>');
+      q.options.forEach(function(text, i){
+        out.push('    <answer fraction="' + (i === q.answerIndex ? 100 : 0) + '" format="html">');
+        out.push('      <text>' + cdata(text) + '</text>');
+        out.push('      <feedback format="html"><text></text></feedback>');
+        out.push('    </answer>');
+      });
+      out.push('  </question>');
+    });
+    out.push('</quiz>');
+    return out.join("\n") + "\n";
+  }
+
+  var fmt = "aiken";
+  try { if (localStorage.getItem("aiken.fmt") === "xml") fmt = "xml"; } catch (e){}
+
   // ---- rendering ----
   var els = {
     filenameLabel: document.getElementById("filenameLabel"),
@@ -581,6 +649,7 @@
       return '<div class="qcard" data-i="' + qi + '"><div class="qhead"><input type="checkbox" aria-label="選取第 ' + (qi + 1) + ' 題"><span class="qnum">第 ' + (qi + 1) + ' 題</span>' +
         (reImg.test(q.stem) ? '<span class="img-tag">需貼圖</span>' : '') +
         (q.edited ? '<span class="edited-tag">已修改</span>' : '') +
+        (fmt === "xml" ? '<label class="mark">分數 <input type="number" class="mark-input" min="0" step="0.5" placeholder="' + getDefaultMark() + '" value="' + (typeof q.mark === "number" ? q.mark : "") + '"></label>' : '') +
         '<button class="btn-sm edit-btn" type="button">編輯</button></div><div class="stem">' + escapeHtml(q.stem) + '</div><div class="opts">' + opts + '</div></div>';
     }).join("");
     els.pickbar.hidden = hostToolbar || !state.questions.length;
@@ -593,7 +662,7 @@
     Array.prototype.forEach.call(cards, function(card){
       var on = selected[+card.getAttribute("data-i")];
       card.classList.toggle("off", !on);
-      card.querySelector("input").checked = on;
+      card.querySelector("input[type=checkbox]").checked = on;
     });
     var picked = state.questions.filter(function(q, i){ return selected[i]; });
     els.selCount.textContent = picked.length;
@@ -613,7 +682,7 @@
       els.notices.innerHTML = "";
     }
 
-    els.output.value = picked.length ? toAiken(picked) : "";
+    els.output.value = picked.length ? (fmt === "xml" ? toMoodleXml(picked) : toAiken(picked)) : "";
     postToolbar(picked.length);
   }
 
@@ -675,6 +744,7 @@
     if (msg){ err.textContent = msg; err.hidden = false; return; }
     var q = parsed.questions[0];
     q.edited = true;
+    if (typeof state.questions[i].mark === "number") q.mark = state.questions[i].mark;
     state.questions[i] = q;
     render();
     showToast("第 " + (i + 1) + " 題已更新");
@@ -689,10 +759,42 @@
       return;
     }
     if (e.target.closest(".edit-btn")){ openEditor(card); return; }
+    if (e.target.closest(".mark")) return;
     var i = +card.getAttribute("data-i");
-    selected[i] = e.target.tagName === "INPUT" ? e.target.checked : !selected[i];
+    selected[i] = e.target.type === "checkbox" ? e.target.checked : !selected[i];
     renderSelection();
   });
+  els.qlist.addEventListener("input", function(e){
+    if (!e.target.classList.contains("mark-input")) return;
+    var i = +e.target.closest(".qcard").getAttribute("data-i");
+    var v = parseFloat(e.target.value);
+    if (e.target.value.trim() === "" || !isFinite(v) || v < 0) delete state.questions[i].mark;
+    else state.questions[i].mark = v;
+    renderSelection();
+  });
+
+  // ---- 輸出格式切換（Aiken／Moodle XML）----
+  var fmtTabs = document.querySelectorAll("#fmtTabs .tab");
+  function applyFmt(){
+    Array.prototype.forEach.call(fmtTabs, function(b){ b.classList.toggle("active", b.getAttribute("data-fmt") === fmt); });
+    document.getElementById("xmlOpts").hidden = fmt !== "xml";
+    els.downloadBtn.textContent = fmt === "xml" ? "下載 .xml（UTF-8）" : "下載 .txt（UTF-8）";
+  }
+  Array.prototype.forEach.call(fmtTabs, function(btn){
+    btn.addEventListener("click", function(){
+      fmt = btn.getAttribute("data-fmt");
+      try { localStorage.setItem("aiken.fmt", fmt); } catch (e){}
+      applyFmt();
+      render();
+    });
+  });
+  document.getElementById("defaultMark").addEventListener("input", function(){
+    var ph = String(getDefaultMark());
+    Array.prototype.forEach.call(els.qlist.querySelectorAll(".mark-input"), function(inp){ inp.placeholder = ph; });
+    renderSelection();
+  });
+  document.getElementById("shuffleOpt").addEventListener("change", renderSelection);
+
   els.selAll.addEventListener("click", function(){ selected = selected.map(function(){ return true; }); renderSelection(); });
   els.selNone.addEventListener("click", function(){ selected = selected.map(function(){ return false; }); renderSelection(); });
   els.selInvert.addEventListener("click", function(){ selected = selected.map(function(v){ return !v; }); renderSelection(); });
@@ -813,9 +915,10 @@
   els.downloadBtn.addEventListener("click", function(){
     var text = els.output.value;
     if (!text){ showToast("目前沒有勾選任何題目"); return; }
-    var filename = state.isSample ? "aiken_範例.txt" : "aiken_轉換結果.txt";
+    var ext = fmt === "xml" ? ".xml" : ".txt";
+    var filename = (fmt === "xml" ? "moodle" : "aiken") + (state.isSample ? "_範例" : "_轉換結果") + ext;
     try {
-      var blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+      var blob = new Blob([text], {type: (fmt === "xml" ? "application/xml" : "text/plain") + ";charset=utf-8"});
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url; a.download = filename;
@@ -828,6 +931,7 @@
     }
   });
 
+  applyFmt();
   render();
 })();
 </script>
