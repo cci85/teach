@@ -1,0 +1,333 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset=utf8><meta name="robots" content="noindex, nofollow"><meta name=viewport content="width=device-width,initial-scale=1"><title>填空題轉換（克漏字）</title></head><body>
+<style>.toolbox-back{display:block;padding:10px 16px;font:500 14px/1.4 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:#ffffffcc;border-bottom:1px solid #d7dce3}.toolbox-back a{color:#2b4c7e;text-decoration:none}.toolbox-back a:hover{text-decoration:underline}@media (prefers-color-scheme:dark){.toolbox-back{background:#1b1e26cc;border-bottom-color:#333846}.toolbox-back a{color:#7fa3d6}}</style>
+<nav class="toolbox-back"><a href="../">← 回教學工具箱</a></nav><script>if(window.self!==window.top)document.querySelector(".toolbox-back").style.display="none"</script>
+<style>
+  :root{
+    --bg:#F5F6F8; --surface:#FFFFFF; --surface-2:#EEF1F5; --border:#D7DCE3;
+    --ink:#1F2430; --ink-muted:#5B6270;
+    --accent:#2B4C7E; --accent-ink:#FFFFFF; --accent-soft:#E7EEF7;
+    --good:#1F7A54; --good-soft:#E4F3EC;
+    --bad:#B23A3A; --bad-soft:#FBEAEA;
+    --mono-bg:#14161B; --mono-ink:#E7EAEF; --mono-border:#2A2E38;
+    --shadow:0 1px 2px rgba(31,36,48,.06), 0 8px 24px -12px rgba(31,36,48,.22);
+    --radius:12px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12141A; --surface:#1B1E26; --surface-2:#232733; --border:#333846;
+      --ink:#E7EAEF; --ink-muted:#9AA2B2;
+      --accent:#7FA3D6; --accent-ink:#0E1420; --accent-soft:#223148;
+      --good:#4CAF7D; --good-soft:#16301F;
+      --bad:#E27272; --bad-soft:#3A1E1E;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12141A; --surface:#1B1E26; --surface-2:#232733; --border:#333846;
+    --ink:#E7EAEF; --ink-muted:#9AA2B2;
+    --accent:#7FA3D6; --accent-ink:#0E1420; --accent-soft:#223148;
+    --good:#4CAF7D; --good-soft:#16301F;
+    --bad:#E27272; --bad-soft:#3A1E1E;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font:14px/1.6 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;}
+  .wrap{max-width:820px; margin:0 auto; padding:28px 20px 40px; display:flex; flex-direction:column; gap:20px;}
+  header h1{margin:0; font-size:26px;}
+  header p{margin:4px 0 0; color:var(--ink-muted); font-size:14.5px; line-height:1.6;}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px;}
+  .card h2{font-size:13px; letter-spacing:.06em; font-weight:700; color:var(--ink-muted); margin:0 0 12px;}
+  textarea{width:100%; resize:vertical; border:1px solid var(--border); border-radius:9px; padding:12px 14px;
+    background:var(--surface); color:var(--ink); font:inherit; font-size:13.5px; line-height:1.6;}
+  textarea:focus, input:focus{outline:2px solid var(--accent); outline-offset:-1px;}
+  #src{min-height:220px;}
+  #out{min-height:220px; background:var(--mono-bg); color:var(--mono-ink); border-color:var(--mono-border);
+    font-family:ui-monospace,"Cascadia Mono",Consolas,monospace; font-size:12.5px; white-space:pre-wrap;}
+  .hint{font-size:12.5px; color:var(--ink-muted); margin-top:8px; line-height:1.6;}
+  .hint code, footer code{font-family:ui-monospace,Consolas,monospace; background:var(--surface-2); padding:1px 5px; border-radius:4px;}
+
+  .modes{display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; padding:10px 12px; background:var(--surface-2); border-radius:9px; margin-bottom:14px; font-size:13.5px;}
+  .modes label{display:inline-flex; align-items:center; gap:6px; cursor:pointer;}
+  .modes input[type=radio]{accent-color:var(--accent);}
+  input.num{width:58px; padding:4px 6px; border:1px solid var(--border); border-radius:7px; background:var(--surface); color:var(--ink); font:inherit; text-align:right;}
+  input.num:disabled{opacity:.5;}
+
+  .q{border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-top:10px;}
+  .q-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:6px;}
+  .q-head b{font-size:14px;}
+  .q-head .tot{font-size:12.5px; color:var(--ink-muted);}
+  .q-head .tot.warn{color:var(--bad); font-weight:600;}
+  .q-text{font-size:12.5px; color:var(--ink-muted); margin-bottom:8px; white-space:pre-wrap; max-height:4.8em; overflow:hidden;}
+  .blank{display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:center; margin-top:6px;}
+  .blank .tag{font-size:12px; font-weight:700; color:var(--accent); background:var(--accent-soft); border-radius:6px; padding:2px 8px; white-space:nowrap;}
+  .blank .tag.auto{color:var(--ink-muted); background:var(--surface-2);}
+  .blank input.ans{width:100%; padding:6px 9px; border:1px solid var(--border); border-radius:7px; background:var(--surface); color:var(--ink); font:inherit;}
+  .blank .pts{display:inline-flex; align-items:center; gap:4px; font-size:12.5px; color:var(--ink-muted);}
+  .ctx{grid-column:2 / 4; font-size:12px; color:var(--ink-muted); margin-top:-2px;}
+  .ctx mark{background:var(--accent-soft); color:var(--accent); border-radius:3px; padding:0 3px;}
+
+  .summary{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:4px;}
+  .stat{flex:1 1 110px; background:var(--surface-2); border-radius:9px; padding:10px 12px;}
+  .stat .n{font-family:ui-monospace,Consolas,monospace; font-size:20px; font-weight:600;}
+  .stat .l{font-size:12px; color:var(--ink-muted);}
+  .stat.bad .n{color:var(--bad);}
+  .empty{font-size:13px; color:var(--ink-muted); padding:6px 2px;}
+
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+  .btn{font:inherit; font-size:14px; font-weight:600; border-radius:9px; border:1px solid transparent; padding:9px 16px; cursor:pointer;}
+  .btn-primary{background:var(--accent); color:var(--accent-ink);}
+  .btn-ghost{background:var(--surface-2); color:var(--ink); border-color:var(--border);}
+  .toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--ink); color:var(--bg);
+    font-size:13px; padding:9px 16px; border-radius:20px; opacity:0; pointer-events:none; transition:opacity .2s;}
+  .toast.show{opacity:1;}
+  footer{font-size:12.5px; color:var(--ink-muted); line-height:1.7;}
+  @media (max-width:560px){ .blank{grid-template-columns:minmax(0,1fr);} .ctx{grid-column:auto;} }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>填空題轉換（克漏字）</h1>
+    <p>貼上填空題的純文字，自動在每個底線空格放入 Moodle 克漏字作答格；答案與配分在下方逐格填寫，產生的文字可直接貼進 Moodle「克漏字（Cloze）」題目的內容欄。</p>
+  </header>
+
+  <section class="card">
+    <h2>1. 貼上題目</h2>
+    <textarea id="src" spellcheck="false" placeholder="例如：&#10;1. (2%) 本題應該編碼為幾個變數？__________&#10;2. (4%) 承上題，資料格式應如何表示？"></textarea>
+    <div class="hint">連續三個以上的底線（<code>___</code> 或全形 <code>＿＿＿</code>）會變成一個作答格；題目裡沒有底線的題，會在題目最後自動補一格。新的一題以行首的題號辨識（<code>1.</code>、<code>2、</code>、<code>(3)</code> 等），題號後的 <code>(2%)</code>、<code>（4分）</code> 會當作該題配分。表格與圖片不處理，只保留文字。</div>
+  </section>
+
+  <section class="card">
+    <h2>2. 填入答案與配分</h2>
+    <div class="modes">
+      <span>配分方式：</span>
+      <label><input type="radio" name="mode" value="manual" checked> 逐格輸入（依題目配分預填）</label>
+      <label><input type="radio" name="mode" value="uniform"> 每格一律 <input class="num" id="uniform" type="number" min="1" step="1" value="2" disabled> 分</label>
+    </div>
+    <div class="summary">
+      <div class="stat"><div class="n" id="sQ">0</div><div class="l">題數</div></div>
+      <div class="stat"><div class="n" id="sB">0</div><div class="l">作答格</div></div>
+      <div class="stat bad"><div class="n" id="sE">0</div><div class="l">尚未填答案</div></div>
+      <div class="stat"><div class="n" id="sP">0</div><div class="l">總分</div></div>
+    </div>
+    <div id="list"><div class="empty">貼上題目後，這裡會列出每一個作答格。</div></div>
+  </section>
+
+  <section class="card">
+    <h2>3. 克漏字文字（貼進 Moodle 題目內容）</h2>
+    <textarea id="out" readonly spellcheck="false"></textarea>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="copyBtn" type="button">複製</button>
+      <button class="btn btn-ghost" id="dlBtn" type="button">下載 .txt</button>
+    </div>
+  </section>
+
+  <footer>
+    每格輸出成 <code>{分數:SHORTANSWER:%100%答案~%0%　　　　}</code>；後面的 <code>%0%</code> 加全形空白不影響計分，只用來決定作答格寬度：題目中的底線空格（填空題）一律 4 個全形空白，題目沒有底線、在題末自動補的格（簡答題）一律 10 個全形空白；若答案本身比這更長，Moodle 會依答案長度加寬。同一格有多個可接受答案時，用 <code>|</code> 分隔，例如 <code>5|五</code>。答案中的 <code>= ~ } # / " \</code> 會自動加上反斜線，學生作答時照常輸入即可。SHORTANSWER 需逐字相符才給分（不分大小寫）。Moodle 克漏字的分數須為整數；依題目配分預填時若無法整除，餘數會加在該題第一格，請自行調整。尚未填答案的格子會輸出「待填」，記得補上。
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var reBlank = /[_＿]{3,}/g;
+  // 行首題號：1.  1、  1．  1)  (1)  （1）  第1題  Q1.
+  var reQNum = /^\s*(?:Q\s*)?(?:[(（]\s*\d+\s*[)）]|第\s*\d+\s*題|\d+\s*[.、．:：)）](?!\d))/i;
+  var rePoints = /^\s*(?:Q\s*)?(?:[(（]\s*\d+\s*[)）]|第\s*\d+\s*題|\d+\s*[.、．:：)）](?!\d))?\s*[(（]\s*(\d+(?:\.\d+)?)\s*(?:%|％|分)\s*[)）]/i;
+
+  // answers / manual points kept by blank order, so editing the question text keeps what was typed
+  var answers = [], manualPts = [], touchedPts = [];
+  var model = {questions: [], blanks: 0};
+
+  function parse(text){
+    var lines = text.replace(/\r\n?/g, "\n").split("\n");
+    // collapse runs of empty lines
+    var clean = [];
+    lines.forEach(function(l){
+      var t = l.replace(/\s+$/, "");
+      if (!t.trim() && clean.length && !clean[clean.length-1].trim()) return;
+      clean.push(t);
+    });
+    while (clean.length && !clean[0].trim()) clean.shift();
+    while (clean.length && !clean[clean.length-1].trim()) clean.pop();
+
+    var qs = [], cur = null;
+    clean.forEach(function(l){
+      if (reQNum.test(l) || !cur){
+        cur = {lines: [], points: null};
+        var mp = l.match(rePoints);
+        if (mp) cur.points = parseFloat(mp[1]);
+        qs.push(cur);
+      }
+      cur.lines.push(l);
+    });
+    // locate blanks; a question without any underline gets one blank at its end
+    qs.forEach(function(q){
+      var n = 0;
+      q.lines.forEach(function(l){ var m = l.match(reBlank); if (m) n += m.length; });
+      q.auto = n === 0;
+      q.nBlanks = n || 1;
+    });
+    return qs;
+  }
+
+  function escAns(s){ return s.replace(/[\\}#~\/"=]/g, "\\$&"); }
+  function escHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+
+  function mode(){ return document.querySelector('input[name=mode]:checked').value; }
+
+  // default manual points: split the question's (x%) evenly; remainder goes to its first blank
+  function defaultPts(q, k){
+    if (q.points == null) return 1;
+    var base = Math.floor(q.points / q.nBlanks), rem = Math.round(q.points - base * q.nBlanks);
+    return Math.max(1, base + (k === 0 ? rem : 0));
+  }
+
+  function ptsOf(q, k, gi){
+    if (mode() === "uniform") return Math.max(1, parseInt($("uniform").value, 10) || 1);
+    if (touchedPts[gi]) return Math.max(1, parseInt(manualPts[gi], 10) || 1);
+    return defaultPts(q, k);
+  }
+
+  function buildList(){
+    var qs = model.questions, gi = 0;
+    if (!qs.length){ $("list").innerHTML = '<div class="empty">貼上題目後，這裡會列出每一個作答格。</div>'; return; }
+    $("list").innerHTML = qs.map(function(q, qi){
+      var title = q.lines[0].trim();
+      var head = '<div class="q-head"><b>第 ' + (qi + 1) + ' 題</b>' + (q.points != null ? '<span class="tot" data-q="' + qi + '"></span>' : '<span class="tot" data-q="' + qi + '"></span>') + '</div>';
+      var full = q.lines.join("\n");
+      var blanks = "";
+      // context snippets around each underline
+      var ctxs = [];
+      if (q.auto){
+        ctxs.push(escHtml(full.replace(/\s+/g, " ").slice(-40)) + ' <mark>格</mark>');
+      } else {
+        var flat = full.replace(/\s+/g, " "), re = new RegExp(reBlank.source, "g"), m;
+        while ((m = re.exec(flat))){
+          ctxs.push(escHtml(flat.slice(Math.max(0, m.index - 24), m.index)) + ' <mark>格</mark> ' + escHtml(flat.slice(m.index + m[0].length, m.index + m[0].length + 16)));
+        }
+      }
+      for (var k = 0; k < q.nBlanks; k++, gi++){
+        blanks += '<div class="blank">' +
+          '<span class="tag' + (q.auto ? ' auto' : '') + '">' + (q.auto ? '簡答格（題末）' : '填空格 ' + (k + 1)) + '</span>' +
+          '<input class="ans" data-g="' + gi + '" placeholder="答案（多個可接受答案用 | 分隔）" value="' + escHtml(answers[gi] || "") + '">' +
+          '<span class="pts"><input class="num pt" type="number" min="1" step="1" data-g="' + gi + '" data-q="' + qi + '" data-k="' + k + '"> 分</span>' +
+          '<div class="ctx">…' + (ctxs[k] || "") + '…</div></div>';
+      }
+      return '<div class="q">' + head + '<div class="q-text">' + escHtml(title) + '</div>' + blanks + '</div>';
+    }).join("");
+    syncPts();
+  }
+
+  function syncPts(){
+    var uni = mode() === "uniform";
+    $("uniform").disabled = !uni;
+    var qs = model.questions;
+    Array.prototype.forEach.call(document.querySelectorAll("input.pt"), function(inp){
+      var g = +inp.dataset.g, q = qs[+inp.dataset.q], k = +inp.dataset.k;
+      inp.value = ptsOf(q, k, g);
+      inp.disabled = uni;
+    });
+    // per-question totals vs stated (x%)
+    var gi = 0;
+    qs.forEach(function(q, qi){
+      var sum = 0;
+      for (var k = 0; k < q.nBlanks; k++, gi++) sum += ptsOf(q, k, gi);
+      var el = document.querySelector('.tot[data-q="' + qi + '"]');
+      if (!el) return;
+      if (q.points != null){
+        el.textContent = "題目配分 " + q.points + "，目前合計 " + sum + " 分" + (sum !== q.points ? "（不一致）" : "");
+        el.classList.toggle("warn", sum !== q.points);
+      } else {
+        el.textContent = "合計 " + sum + " 分";
+        el.classList.remove("warn");
+      }
+    });
+    buildOutput();
+  }
+
+  function buildOutput(){
+    var qs = model.questions, gi = 0, total = 0, emptyCnt = 0;
+    // 作答格寬度：題目中的底線空格（填空題）4 個全形空白、題末自動補的格（簡答題）10 個全形空白
+    var PAD_FILL = "~%0%" + "\u3000\u3000\u3000\u3000";
+    var PAD_SHORT = "~%0%" + new Array(11).join("\u3000");
+    var out = qs.map(function(q){
+      var k = 0;
+      function cloze(){
+        var pad = q.auto ? PAD_SHORT : PAD_FILL;
+        var g = gi++, p = ptsOf(q, k++, g);
+        total += p;
+        var alts = (answers[g] || "").split("|").map(function(x){ return x.trim(); }).filter(Boolean);
+        if (!alts.length){ emptyCnt++; alts = ["待填"]; }
+        return "{" + p + ":SHORTANSWER:" + alts.map(function(a){ return "%100%" + escAns(a); }).join("~") + pad + "}";
+      }
+      var lines = q.lines.map(function(l){ return l.replace(reBlank, function(){ return cloze(); }); });
+      if (q.auto){
+        // put the auto blank at the end of the last non-empty line
+        for (var i = lines.length - 1; i >= 0; i--){ if (lines[i].trim()){ lines[i] = lines[i] + " " + cloze(); break; } }
+      }
+      return lines.join("\n");
+    }).join("\n");
+    $("out").value = out;
+    $("sQ").textContent = qs.length;
+    $("sB").textContent = model.blanks;
+    $("sE").textContent = emptyCnt;
+    $("sP").textContent = total;
+  }
+
+  function reparse(){
+    model.questions = parse($("src").value);
+    model.blanks = model.questions.reduce(function(s, q){ return s + q.nBlanks; }, 0);
+    buildList();
+  }
+
+  var timer = null;
+  $("src").addEventListener("input", function(){ clearTimeout(timer); timer = setTimeout(reparse, 300); });
+  $("list").addEventListener("input", function(e){
+    var t = e.target, g = +t.dataset.g;
+    if (t.classList.contains("ans")){ answers[g] = t.value; buildOutput(); }
+    else if (t.classList.contains("pt")){ manualPts[g] = t.value; touchedPts[g] = true; syncPts(); }
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=mode]'), function(r){ r.addEventListener("change", syncPts); });
+  $("uniform").addEventListener("input", syncPts);
+
+  function toast(msg){
+    var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+
+  // copy as rich text (one paragraph per line) so Moodle's editor keeps the line breaks; plain text as fallback
+  $("copyBtn").addEventListener("click", function(){
+    var text = $("out").value;
+    if (!text){ toast("目前沒有內容可複製"); return; }
+    var html = text.split("\n").map(function(l){ return "<p>" + (escHtml(l) || "&nbsp;") + "</p>"; }).join("");
+    var done = function(){ toast("已複製，可直接貼進 Moodle 題目內容"); };
+    var fallback = function(){
+      var o = $("out"); o.removeAttribute("readonly"); o.select();
+      try { document.execCommand("copy"); done(); } catch (e){ toast("複製失敗，請手動選取後 Ctrl+C"); }
+      o.setAttribute("readonly", "true");
+    };
+    try {
+      if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write){
+        navigator.clipboard.write([new ClipboardItem({
+          "text/html": new Blob([html], {type: "text/html"}),
+          "text/plain": new Blob([text], {type: "text/plain"})
+        })]).then(done).catch(fallback);
+      } else fallback();
+    } catch (e){ fallback(); }
+  });
+
+  $("dlBtn").addEventListener("click", function(){
+    var text = $("out").value;
+    if (!text){ toast("目前沒有內容可下載"); return; }
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], {type: "text/plain;charset=utf-8"}));
+    a.download = "克漏字.txt";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+  });
+})();
+</script>
+</body></html>
