@@ -327,6 +327,13 @@
     return "⟦IMG:" + (imgStore.length - 1) + "⟧";
   }
   function usableImgs(q){ return (q.images || []).filter(function(im){ return im.ext; }); }
+  // 已從 Word 帶入圖片的題目，題幹裡的「(圖)」標記已無作用，一律刪除；
+  // 沒帶到圖片的題目保留「(圖)」，才會出現「需貼圖」提醒。
+  function stripImgMark(q){
+    if (!usableImgs(q).length) return;
+    var s = q.stem.replace(/\s*[(（]\s*圖\s*[)）]\s*/g, " ").replace(/\s+/g, " ").trim();
+    if (s) q.stem = s;
+  }
   function badImgs(q){ return (q.images || []).filter(function(im){ return !im.ext; }); }
 
   function parseAiken(rawText){
@@ -475,6 +482,7 @@
       }
     }
     finalize(current);
+    questions.forEach(stripImgMark);
 
     return {questions: questions, problems: problems};
   }
@@ -837,6 +845,7 @@
     q.edited = true;
     if (typeof state.questions[i].mark === "number") q.mark = state.questions[i].mark;
     q.images = state.questions[i].images || []; // 編輯只改文字，原本的圖片保留
+    stripImgMark(q);
     state.questions[i] = q;
     render();
     showToast("第 " + (i + 1) + " 題已更新");
