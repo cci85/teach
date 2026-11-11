@@ -801,7 +801,7 @@
     });
     var html = "";
     if (withImg.length && fmt === "aiken"){
-      html += '<div class="warning"><b>Aiken 無法包含圖片：</b>第 ' + withImg.join("、") + ' 題含 Word 檔裡的圖片，Aiken 格式會只輸出文字。請改選上方輸出的「Moodle XML」，圖片會一併內嵌。</div>';
+      html += '<div class="warning"><b>Aiken 無法包含圖片：</b>第 ' + withImg.join("、") + ' 題含 Word 檔裡的圖片，Aiken 格式會只輸出文字。請把下方「3. 輸出內容」切換成「Moodle XML」，圖片會一併內嵌。 <button class="btn-sm to-xml" type="button">直接切換成 Moodle XML</button></div>';
     } else if (withImg.length){
       html += '<div class="notice"><b>含圖題目（' + withImg.length + ' 題）：</b>第 ' + withImg.join("、") + ' 題的圖片已內嵌在 XML 裡，匯入後顯示在題幹下方、選項上方，不必另外上傳。</div>';
     }
@@ -925,6 +925,13 @@
       applyFmt();
       render();
     });
+  });
+  els.notices.addEventListener("click", function(e){
+    if (!e.target.closest(".to-xml")) return;
+    var xmlTab = document.querySelector('#fmtTabs .tab[data-fmt="xml"]');
+    xmlTab.click();
+    xmlTab.scrollIntoView({behavior: "smooth", block: "center"});
+    showToast("已切換成 Moodle XML，圖片會一併內嵌");
   });
   document.getElementById("defaultMark").addEventListener("input", function(){
     var ph = String(getDefaultMark());
