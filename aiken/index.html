@@ -107,10 +107,6 @@
   .stat .label{font-size:12px; color:var(--ink-muted);}
   .stat.good .n{color:var(--good);}
   .stat.bad .n{color:var(--bad);}
-  .sample-note{
-    font-size:12.5px; color:var(--ink-muted); background:var(--surface-2);
-    border-radius:8px; padding:8px 12px; margin-top:12px;
-  }
 
   .warnings{margin-top:14px; display:flex; flex-direction:column; gap:8px;}
   .warning{
@@ -243,14 +239,13 @@
     </div>
   </section>
 
-  <section class="card" id="summaryCard">
+  <section class="card" id="summaryCard" hidden>
     <h2>2. 轉換結果</h2>
     <div class="summary-row">
       <div class="stat"><div class="n" id="statTotal">4</div><div class="label">偵測到的題目</div></div>
       <div class="stat good"><div class="n" id="statOk">4</div><div class="label">成功轉換</div></div>
       <div class="stat bad"><div class="n" id="statBad">0</div><div class="label">需要你檢查</div></div>
     </div>
-    <div class="sample-note" id="sampleNote">目前顯示的是範例資料（你先前貼過的市場界定測驗題），貼上文字後（或上傳檔案並按「開始轉換」）會自動換成你的內容。</div>
     <div class="warnings" id="warnings" hidden></div>
     <div class="warnings" id="notices" hidden></div>
 
@@ -269,7 +264,7 @@
     <div class="qlist" id="qlist" style="margin-top:12px;"></div>
   </section>
 
-  <section class="card">
+  <section class="card" id="outputCard" hidden>
     <h2 id="outTitle">3. 輸出內容（只含已勾選的題目）</h2>
     <div class="tabs" role="tablist" id="fmtTabs">
       <button class="tab active" type="button" role="tab" data-fmt="aiken">Aiken（.txt）</button>
@@ -301,48 +296,6 @@
 (function(){
   "use strict";
 
-  var sampleQuestions = [
-    {
-      stem: "Which statement best explains the dual nature of market definition in marketing science? 下列何者最能說明行銷科學中市場界定的雙重屬性？",
-      options: [
-        "A market is defined only by government classifications and legally registered industry codes. 市場只能依政府分類與法定產業代碼加以界定。",
-        "A market combines producer-side product categories with consumer-side related activities. 市場界定結合生產者端的產品類別與消費者端的相關活動。",
-        "A market consists only of brands that sell products at identical price levels. 市場僅由價格水準完全相同的品牌所構成。",
-        "A market should include every product that can be purchased by the same household. 市場應納入同一家庭有可能購買的所有產品。"
-      ],
-      answerIndex: 1
-    },
-    {
-      stem: "What is the central focus of the consumer side of market definition? 市場界定中的消費者端，其核心關注為何？",
-      options: [
-        "The technical specifications used by manufacturers to create a product. 製造商用來生產產品的技術規格。",
-        "The retailer's inventory level and warehouse replenishment schedule. 零售商的庫存水位與倉儲補貨時程。",
-        "The related activities and problems that offerings help consumers address. 提供物協助消費者處理的相關活動與生活問題。",
-        "The accounting rules used to calculate the market share denominator. 用於計算市場占有率分母的會計規則。"
-      ],
-      answerIndex: 2
-    },
-    {
-      stem: "What does non-participation mean in the context of market definition? 在市場界定的脈絡下，非參與的意義為何？",
-      options: [
-        "Consumers have no relevant need and therefore never face the activity. 消費者完全沒有相關需求，因此從未面臨該活動。",
-        "Consumers may have a need but avoid current offerings because they are inadequate. 消費者可能有需求，但因現有提供物不足而不採用市場方案。",
-        "Consumers choose only the lowest-priced brand within the existing market. 消費者只會在既有市場中選擇價格最低的品牌。",
-        "Consumers answer every pick-any option by selecting all listed brands. 消費者在複選題中將所有列出的品牌全部勾選。"
-      ],
-      answerIndex: 1
-    },
-    {
-      stem: "What is the main purpose of a screening variable in the research process? 問卷使用篩選題的主要目的為何？",
-      options: [
-        "To identify qualified prospects whose responses fit the intended market analysis. 辨識符合研究市場範圍、可納入分析的合格潛在顧客。",
-        "To force every respondent to state a single favorite brand preference. 強制每一位受訪者表明唯一最喜歡的品牌偏好。",
-        "To calculate the exact distance between brands on a competition map. 計算競爭圖譜中各品牌之間的精確距離。",
-        "To replace binary coding with open-ended descriptions of consumer behavior. 以開放式行為描述取代二元編碼資料。"
-      ],
-      answerIndex: 0
-    }
-  ];
 
   var LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -694,6 +647,7 @@
 
   var fmt = "aiken";
   try { if (localStorage.getItem("aiken.fmt") === "xml") fmt = "xml"; } catch (e){}
+  var userFmt = fmt; // 使用者自己點選的格式（會記住）；含圖時的自動切換不算
 
   // ---- rendering ----
   var els = {
@@ -704,7 +658,6 @@
     statTotal: document.getElementById("statTotal"),
     statOk: document.getElementById("statOk"),
     statBad: document.getElementById("statBad"),
-    sampleNote: document.getElementById("sampleNote"),
     warnings: document.getElementById("warnings"),
     notices: document.getElementById("notices"),
     qlist: document.getElementById("qlist"),
@@ -720,9 +673,9 @@
     toast: document.getElementById("toast")
   };
 
-  var state = { questions: sampleQuestions, problems: [], isSample: true };
+  var state = { questions: [], problems: [], converted: false };
   var fullOutput = "";
-  var selected = sampleQuestions.map(function(){ return true; });
+  var selected = [];
   var reImg = /[(（]\s*圖\s*[)）]/;
 
   function escapeHtml(s){
@@ -744,8 +697,9 @@
     els.statTotal.textContent = total;
     els.statOk.textContent = state.questions.length;
     els.statBad.textContent = state.problems.length;
+    document.getElementById("summaryCard").hidden = !state.converted;
+    document.getElementById("outputCard").hidden = !state.converted;
 
-    els.sampleNote.hidden = !state.isSample;
 
     if (state.problems.length){
       els.warnings.hidden = false;
@@ -920,7 +874,7 @@
   }
   Array.prototype.forEach.call(fmtTabs, function(btn){
     btn.addEventListener("click", function(){
-      fmt = btn.getAttribute("data-fmt");
+      fmt = userFmt = btn.getAttribute("data-fmt");
       try { localStorage.setItem("aiken.fmt", fmt); } catch (e){}
       applyFmt();
       render();
@@ -1033,11 +987,17 @@
     els.convertBtn.textContent = "轉換中…";
     job.then(function(lines){
       var parsed = parseAiken(lines);
-      state = {questions: parsed.questions, problems: parsed.problems, isSample: false};
+      state = {questions: parsed.questions, problems: parsed.problems, converted: true};
       selected = parsed.questions.map(function(){ return true; });
       if (document.getElementById("autoBalance").checked) balanceAnswers();
+      // 檔案裡有圖片時，Aiken 帶不了圖，直接改用 Moodle XML
+      var hasImg = parsed.questions.some(function(q){ return usableImgs(q).length; });
+      // 只有這次改用 XML，不記住；下次轉換沒有圖的題目時，回到使用者自己選的格式
+      var switched = hasImg && userFmt !== "xml";
+      fmt = hasImg ? "xml" : userFmt;
+      applyFmt();
       render();
-      showToast("轉換完成：" + parsed.questions.length + " 題成功");
+      showToast("轉換完成：" + parsed.questions.length + " 題成功" + (switched ? "；檔案含圖片，已自動改用 Moodle XML" : ""));
     }).catch(function(err){
       console.error(err);
       showToast("讀取失敗，請確認檔案是否為正常的 .docx 或 .txt");
@@ -1072,7 +1032,7 @@
     var text = fullOutput;
     if (!text){ showToast("目前沒有勾選任何題目"); return; }
     var ext = fmt === "xml" ? ".xml" : ".txt";
-    var filename = (fmt === "xml" ? "moodle" : "aiken") + (state.isSample ? "_範例" : "_轉換結果") + ext;
+    var filename = (fmt === "xml" ? "moodle" : "aiken") + "_轉換結果" + ext;
     try {
       var blob = new Blob([text], {type: (fmt === "xml" ? "application/xml" : "text/plain") + ";charset=utf-8"});
       var url = URL.createObjectURL(blob);
