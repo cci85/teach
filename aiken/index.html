@@ -176,6 +176,9 @@
     background:var(--surface); color:var(--ink); border:1px solid var(--border);}
   .btn-sm:hover{border-color:var(--accent);}
   .qcard .stem{font-size:14px; line-height:1.55; margin-bottom:10px;}
+  .qcard .qimgs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
+  .qcard .qimgs img{max-width:100%; max-height:220px; border:1px solid var(--border); border-radius:6px; background:#fff;}
+  .qcard .qimgs .badimg{font-size:12.5px; color:var(--bad); background:var(--bad-soft); border-radius:6px; padding:8px 10px;}
   .opts{display:flex; flex-direction:column; gap:6px;}
   .opt{
     display:flex; align-items:flex-start; gap:8px; font-size:13px; line-height:1.5;
@@ -215,7 +218,7 @@
   <header>
     <div class="eyebrow">Word → Moodle 匯入格式</div>
     <h1>測驗格式轉換</h1>
-    <p>上傳含選擇題的 Word 檔或純文字檔，或直接貼上文字，自動整理成 Moodle 可直接匯入的 Aiken 或 Moodle XML 格式：去掉題號、統一選項標號、拿掉 Explanation，只留下 Moodle 讀得懂的部分。需要事先指定配分時，請選 Moodle XML。</p>
+    <p>上傳含選擇題的 Word 檔或純文字檔，或直接貼上文字，自動整理成 Moodle 可直接匯入的 Aiken 或 Moodle XML 格式：去掉題號、統一選項標號、拿掉 Explanation，只留下 Moodle 讀得懂的部分。需要事先指定配分，或 Word 檔裡有統計圖等圖片時，請選 Moodle XML。</p>
   </header>
 
   <section class="card">
@@ -270,7 +273,7 @@
     <h2 id="outTitle">3. 輸出內容（只含已勾選的題目）</h2>
     <div class="tabs" role="tablist" id="fmtTabs">
       <button class="tab active" type="button" role="tab" data-fmt="aiken">Aiken（.txt）</button>
-      <button class="tab" type="button" role="tab" data-fmt="xml">Moodle XML（.xml，可指定配分）</button>
+      <button class="tab" type="button" role="tab" data-fmt="xml">Moodle XML（.xml，可指定配分、含圖片）</button>
     </div>
     <div id="xmlOpts" hidden>
       <div class="fmt-opts">
@@ -287,7 +290,7 @@
   </section>
 
   <footer>
-    題幹前面的題號（<code>Q1.</code>、<code>1.</code>、<code>1、</code>、<code>(1)</code>、<code>第1題</code> 等）會自動刪除；ANSWER 之後到下一題之前的圖片、表格與文字說明也會一併刪除（題幹以「緊接在選項 A 前面的那一段」辨識）。每一題之間會自動空一行；純文字檔與貼上的文字以「一行」為一段，題幹即選項 A 的前一行。純文字檔可為 UTF-8 或 Big5 編碼。選項一律重新編成 <code>A. B. C. D.</code>、正確答案輸出成 <code>ANSWER: X</code>。勾選「轉換後自動平均分配」時，會調整已選題目的選項順序，讓正確答案平均落在 A、B、C、D（各位置題數最多相差一題）：只移動正確選項，其餘選項維持原本的相對順序；選項含「以上皆是」「以上皆非」「A 和 B」這類依位置而定的說法時，該題標示「位置固定」，不會調整。之後改變勾選題目，可按「重新平均分配」依目前已選題目重新排列。原本的 Explanation／詳解內容不會出現在輸出裡。題目與選項中的「變項」一律自動改為「變數」（自變項、依變項、中介變項、調節變項等複合詞同樣適用）。每題卡片右上角的「編輯」可原地修改或整題貼上新版本，儲存後依同樣規則重新辨識。轉換後所有題目預設全選，可在「轉換結果」逐題勾選或取消（點題目卡片任一處即可切換），下方的輸出內容、複製與下載都只包含已勾選的題目。若某一題選項少於兩個、或找不到正確答案標記，會被列在「需要你檢查」，不會混進正式輸出中，請回 Word 檔手動確認後再匯入 Moodle。下載的 <code>.txt</code> 與 <code>.xml</code> 一律是不含 BOM 的 UTF-8，Moodle 匯入前不需要再另存編碼。Aiken 格式無法記錄分數，匯入後每題都是 1 分；改選 Moodle XML 可先設定每題預設分數（也可逐題指定），並決定選項是否隨機排列，選項編號為 A. B. C. D.。
+    題幹前面的題號（<code>Q1.</code>、<code>1.</code>、<code>1、</code>、<code>(1)</code>、<code>第1題</code> 等）會自動刪除；ANSWER 之後到下一題之前的表格與文字說明會一併刪除（題幹以「緊接在選項 A 前面的那一段」辨識）。Word 檔裡的圖片（例如統計圖）會歸給「目前這一題」：放在題幹與選項之間、選項之後，或 ANSWER 之後到下一題之前都可以，一題可放多張；輸出 Moodle XML 時圖片以 base64 內嵌，匯入後顯示在題幹下方、選項上方，不必另外上傳。圖片請設為「與文字排列」；從 Excel 或 SPSS 貼過來的圖表，請用「選擇性貼上 → 圖片（PNG）」，可編輯的 Excel 圖表物件讀不到，EMF／WMF 圖片 Moodle 無法顯示會被略過。Aiken 格式與貼上的文字都無法帶入圖片。每一題之間會自動空一行；純文字檔與貼上的文字以「一行」為一段，題幹即選項 A 的前一行。純文字檔可為 UTF-8 或 Big5 編碼。選項一律重新編成 <code>A. B. C. D.</code>、正確答案輸出成 <code>ANSWER: X</code>。勾選「轉換後自動平均分配」時，會調整已選題目的選項順序，讓正確答案平均落在 A、B、C、D（各位置題數最多相差一題）：只移動正確選項，其餘選項維持原本的相對順序；選項含「以上皆是」「以上皆非」「A 和 B」這類依位置而定的說法時，該題標示「位置固定」，不會調整。之後改變勾選題目，可按「重新平均分配」依目前已選題目重新排列。原本的 Explanation／詳解內容不會出現在輸出裡。題目與選項中的「變項」一律自動改為「變數」（自變項、依變項、中介變項、調節變項等複合詞同樣適用）。每題卡片右上角的「編輯」可原地修改或整題貼上新版本，儲存後依同樣規則重新辨識。轉換後所有題目預設全選，可在「轉換結果」逐題勾選或取消（點題目卡片任一處即可切換），下方的輸出內容、複製與下載都只包含已勾選的題目。若某一題選項少於兩個、或找不到正確答案標記，會被列在「需要你檢查」，不會混進正式輸出中，請回 Word 檔手動確認後再匯入 Moodle。下載的 <code>.txt</code> 與 <code>.xml</code> 一律是不含 BOM 的 UTF-8，Moodle 匯入前不需要再另存編碼。Aiken 格式無法記錄分數，匯入後每題都是 1 分；改選 Moodle XML 可先設定每題預設分數（也可逐題指定），並決定選項是否隨機排列，選項編號為 A. B. C. D.。
   </footer>
 
 </div>
@@ -356,6 +359,23 @@
   var reAnswer = /^(?:ANSWER|Ans|Answer|答案|正確答案)\s*[:：]?\s*([A-Za-z])\b/i;
   var reExplanation = /^(?:Explanation|解析|詳解|說明)\s*[:：]/i;
 
+  // ---- 圖片 ----
+  // Word 裡的圖片在轉成一行一行的文字時，以「⟦IMG:n⟧」單獨一行代表，實際資料存在 imgStore。
+  // 歸屬規則：圖片歸給「目前這一題」——題幹與選項之間、選項之後、ANSWER 之後到下一題之前都算；
+  // 檔案開頭、第一題之前的圖片則歸給第一題。
+  var imgStore = [];
+  var reImgMarker = /^⟦IMG:(\d+)⟧$/;
+  var IMG_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/jpg": "jpg", "image/gif": "gif", "image/bmp": "bmp", "image/webp": "webp", "image/svg+xml": "svg"};
+  function imgMarker(src){
+    var m = /^data:([^;,]+);base64,(.*)$/.exec(src || "");
+    if (!m) return null;
+    var type = m[1].toLowerCase();
+    imgStore.push({type: type, b64: m[2], ext: IMG_EXT[type] || null});
+    return "⟦IMG:" + (imgStore.length - 1) + "⟧";
+  }
+  function usableImgs(q){ return (q.images || []).filter(function(im){ return im.ext; }); }
+  function badImgs(q){ return (q.images || []).filter(function(im){ return !im.ext; }); }
+
   function parseAiken(rawText){
     // 用詞統一：「變項」一律改為「變數」（含自變項、依變項、中介變項、調節變項等複合詞）
     rawText = rawText.replace(/變項/g, "變數");
@@ -369,6 +389,8 @@
     // 遇到以 A 開頭的選項時，只取緊鄰選項 A 的最後一個段落當題幹，
     // 其餘文字說明、表格內容一律丟棄；圖片在轉成文字時本來就不會留下。
     var pending = [];
+    var lastQ = null;        // 最近一題成功轉換的題目（Explanation 之後 current 已清空，圖片仍歸它）
+    var orphanImgs = [];     // 第一題之前出現的圖片
 
     function lastParagraph(buf){
       var end = buf.length;
@@ -402,12 +424,30 @@
         problems.push({stem: stem, reason: "正確答案標的字母「" + q.answerLetter + "」對不上任何一個選項"});
         return;
       }
-      questions.push({stem: stem, options: q.options.map(function(o){ return o.text.trim(); }), answerIndex: idx});
+      lastQ = {stem: stem, options: q.options.map(function(o){ return o.text.trim(); }), answerIndex: idx, images: q.images};
+      questions.push(lastQ);
+    }
+
+    function newQuestion(stem, options){
+      var q = {stem: stem, options: options, answerLetter: null, images: orphanImgs};
+      orphanImgs = [];
+      return q;
     }
 
     for (var li = 0; li < lines.length; li++){
       var raw = lines[li];
       var line = raw.trim();
+
+      var mImg = line.match(reImgMarker);
+      if (mImg){
+        var im = imgStore[+mImg[1]];
+        if (im){
+          if (current) current.images.push(im);
+          else if (lastQ) lastQ.images.push(im);
+          else orphanImgs.push(im);
+        }
+        continue;
+      }
 
       // 空行只用來界定「解析內容到此為止」，不再直接觸發整題結束——
       // 有些檔案把 Ans 跟 Explanation 拆成兩個段落，中間就會有一個空行，
@@ -448,7 +488,7 @@
       if (mQ){
         finalize(current);
         lastNum = mQ.num;
-        current = {stem: mQ.stem, options: [], answerLetter: null};
+        current = newQuestion(mQ.stem, []);
         pending = [];
         continue;
       }
@@ -461,7 +501,7 @@
           var stemText = lastParagraph(pending);
           var sq2 = matchQuestion(stemText);
           if (sq2){ stemText = sq2.stem; lastNum = sq2.num; }
-          current = {stem: stemText, options: [{letter: mOpt[1], text: mOpt[2]}], answerLetter: null};
+          current = newQuestion(stemText, [{letter: mOpt[1], text: mOpt[2]}]);
           pending = [];
         } else {
           pending.push(line);
@@ -493,6 +533,17 @@
     var doc = new DOMParser().parseFromString(html, "text/html");
     var lines = [];
 
+    // 圖片各自單獨成一行（放在同一段文字之後）；巢狀清單／表格可能重複走到同一張圖，用 seen 避免重複。
+    var seen = [];
+    function pushImages(el){
+      Array.prototype.forEach.call(el.querySelectorAll("img"), function(img){
+        if (seen.indexOf(img) !== -1) return;
+        seen.push(img);
+        var mk = imgMarker(img.getAttribute("src"));
+        if (mk) lines.push(mk);
+      });
+    }
+
     function pushInlineChunks(el){
       var parts = el.innerHTML.split(/<br\s*\/?>/i);
       parts.forEach(function(part){
@@ -500,6 +551,7 @@
         tmp.innerHTML = part;
         var text = (tmp.textContent || "").replace(/\s+/g, " ").trim();
         if (text) lines.push(text);
+        pushImages(tmp);
       });
     }
 
@@ -512,11 +564,13 @@
         Array.prototype.forEach.call(el.querySelectorAll("li"), function(li){
           var text = (li.textContent || "").replace(/\s+/g, " ").trim();
           if (text) lines.push(text);
+          pushImages(li);
         });
       } else if (tag === "TABLE"){
         Array.prototype.forEach.call(el.querySelectorAll("td, th"), function(cell){
           var text = (cell.textContent || "").replace(/\s+/g, " ").trim();
           if (text) lines.push(text);
+          pushImages(cell);
         });
         lines.push("");
       }
@@ -570,14 +624,24 @@
     return (typeof q.mark === "number" && isFinite(q.mark) && q.mark >= 0) ? q.mark : getDefaultMark();
   }
 
-  function toMoodleXml(questions){
+  // 圖片以 base64 內嵌在 <file>，題幹 HTML 用 @@PLUGINFILE@@/檔名 引用，圖片放在題幹之後、選項之前。
+  // abbrev 為 true 時只用於畫面顯示：base64 縮短，避免輸出框塞滿亂碼；複製與下載一律用完整版。
+  function toMoodleXml(questions, abbrev){
     var shuffle = document.getElementById("shuffleOpt").checked;
     var out = ['<?xml version="1.0" encoding="UTF-8"?>', '<quiz>'];
     questions.forEach(function(q){
       var name = q.stem.length > 250 ? q.stem.slice(0, 250) : q.stem;
+      var imgs = usableImgs(q);
+      var html = escapeHtml(q.stem) + imgs.map(function(im, k){
+        return '<p><img src="@@PLUGINFILE@@/image' + (k + 1) + '.' + im.ext + '" alt="圖' + (k + 1) + '" style="max-width:100%;"></p>';
+      }).join("");
+      var files = imgs.map(function(im, k){
+        var data = abbrev ? im.b64.slice(0, 40) + '…（圖片資料約 ' + Math.round(im.b64.length * 3 / 4 / 1024) + ' KB，複製與下載時完整輸出）' : im.b64;
+        return '<file name="image' + (k + 1) + '.' + im.ext + '" path="/" encoding="base64">' + data + '</file>';
+      }).join("");
       out.push('  <question type="multichoice">');
       out.push('    <name><text>' + escXml(name) + '</text></name>');
-      out.push('    <questiontext format="html"><text>' + cdata(q.stem) + '</text></questiontext>');
+      out.push('    <questiontext format="html"><text><![CDATA[' + html + ']]></text>' + files + '</questiontext>');
       out.push('    <generalfeedback format="html"><text></text></generalfeedback>');
       out.push('    <defaultgrade>' + markOf(q) + '</defaultgrade>');
       out.push('    <penalty>0.3333333</penalty>');
@@ -657,6 +721,7 @@
   };
 
   var state = { questions: sampleQuestions, problems: [], isSample: true };
+  var fullOutput = "";
   var selected = sampleQuestions.map(function(){ return true; });
   var reImg = /[(（]\s*圖\s*[)）]/;
 
@@ -664,6 +729,14 @@
     return s.replace(/[&<>"']/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
     });
+  }
+
+  function imgsHtml(q){
+    if (!(q.images || []).length) return "";
+    return '<div class="qimgs">' + q.images.map(function(im){
+      return im.ext ? '<img alt="" src="data:' + im.type + ';base64,' + im.b64 + '">'
+        : '<span class="badimg">此圖為 ' + escapeHtml(im.type) + ' 格式，瀏覽器與 Moodle 無法顯示，輸出時略過</span>';
+    }).join("") + '</div>';
   }
 
   function render(){
@@ -690,11 +763,11 @@
         return '<div class="opt' + (isCorrect ? ' correct' : '') + '"><span class="chip">' + LETTERS[i] + '</span><span>' + escapeHtml(text) + '</span></div>';
       }).join("");
       return '<div class="qcard" data-i="' + qi + '"><div class="qhead"><input type="checkbox" aria-label="選取第 ' + (qi + 1) + ' 題"><span class="qnum">第 ' + (qi + 1) + ' 題</span>' +
-        (reImg.test(q.stem) ? '<span class="img-tag">需貼圖</span>' : '') +
+        ((q.images || []).length ? '<span class="img-tag">含圖 ' + q.images.length + '</span>' : (reImg.test(q.stem) ? '<span class="img-tag">需貼圖</span>' : '')) +
         (q.edited ? '<span class="edited-tag">已修改</span>' : '') +
         (isLocked(q) ? '<span class="img-tag" title="選項含「以上皆是」等依位置而定的說法，平均分配時不會移動">位置固定</span>' : '') +
         (fmt === "xml" ? '<label class="mark">分數 <input type="number" class="mark-input" min="0" step="0.5" placeholder="' + getDefaultMark() + '" value="' + (typeof q.mark === "number" ? q.mark : "") + '"></label>' : '') +
-        '<button class="btn-sm edit-btn" type="button">編輯</button></div><div class="stem">' + escapeHtml(q.stem) + '</div><div class="opts">' + opts + '</div></div>';
+        '<button class="btn-sm edit-btn" type="button">編輯</button></div><div class="stem">' + escapeHtml(q.stem) + '</div>' + imgsHtml(q) + '<div class="opts">' + opts + '</div></div>';
     }).join("");
     els.pickbar.hidden = hostToolbar || !state.questions.length;
     renderSelection();
@@ -718,20 +791,34 @@
     els.selTotal.textContent = state.questions.length;
 
     // 題幹含「(圖)」的已選題目照常輸出，只提醒匯入 Moodle 後要手動補圖（題號對應上方清單）。
-    var imgList = [];
-    state.questions.forEach(function(q, i){ if (selected[i] && reImg.test(q.stem)) imgList.push({n: i + 1, stem: q.stem}); });
+    // 已從 Word 帶入圖片的題目不再列入「需貼圖」。
+    var imgList = [], withImg = [], badList = [];
+    state.questions.forEach(function(q, i){
+      if (!selected[i]) return;
+      if (usableImgs(q).length) withImg.push(i + 1);
+      if (badImgs(q).length) badList.push(i + 1);
+      if (!(q.images || []).length && reImg.test(q.stem)) imgList.push({n: i + 1, stem: q.stem});
+    });
+    var html = "";
+    if (withImg.length && fmt === "aiken"){
+      html += '<div class="warning"><b>Aiken 無法包含圖片：</b>第 ' + withImg.join("、") + ' 題含 Word 檔裡的圖片，Aiken 格式會只輸出文字。請改選上方輸出的「Moodle XML」，圖片會一併內嵌。</div>';
+    } else if (withImg.length){
+      html += '<div class="notice"><b>含圖題目（' + withImg.length + ' 題）：</b>第 ' + withImg.join("、") + ' 題的圖片已內嵌在 XML 裡，匯入後顯示在題幹下方、選項上方，不必另外上傳。</div>';
+    }
+    if (badList.length){
+      html += '<div class="warning"><b>圖片格式無法顯示：</b>第 ' + badList.join("、") + ' 題有 EMF／WMF 等格式的圖片（多半是從 SPSS 或 Excel 直接複製），瀏覽器與 Moodle 都無法顯示，已略過。請在 Word 裡改用「選擇性貼上 → 圖片（PNG）」後重新上傳。</div>';
+    }
     if (imgList.length){
-      els.notices.hidden = false;
-      els.notices.innerHTML = '<div class="notice"><b>需貼圖（' + imgList.length + ' 題）：</b>以下已選題目標有「(圖)」，匯入 Moodle 後請手動補上圖片。</div>' +
+      html += '<div class="notice"><b>需貼圖（' + imgList.length + ' 題）：</b>以下已選題目標有「(圖)」，匯入 Moodle 後請手動補上圖片。</div>' +
         imgList.map(function(p){
           return '<div class="notice"><b>第 ' + p.n + ' 題</b>　「' + escapeHtml(p.stem.slice(0,60)) + (p.stem.length>60?'…':'') + '」</div>';
         }).join("");
-    } else {
-      els.notices.hidden = true;
-      els.notices.innerHTML = "";
     }
+    els.notices.hidden = !html;
+    els.notices.innerHTML = html;
 
-    els.output.value = picked.length ? (fmt === "xml" ? toMoodleXml(picked) : toAiken(picked)) : "";
+    fullOutput = picked.length ? (fmt === "xml" ? toMoodleXml(picked) : toAiken(picked)) : "";
+    els.output.value = picked.length && fmt === "xml" && withImg.length ? toMoodleXml(picked, true) : fullOutput;
     postToolbar(picked.length);
   }
 
@@ -769,7 +856,8 @@
     var i = +card.getAttribute("data-i");
     card.classList.add("editing");
     card.innerHTML = '<div class="qhead"><span class="qnum">第 ' + (i + 1) + ' 題・編輯中</span></div>' +
-      '<div class="editbox"><div class="edit-hint">直接修改，或整段貼上新版本（題幹一行、A) B) C) D) 選項各一行、最後一行 ANSWER: 字母）。Ctrl+Enter 儲存，Esc 取消。</div>' +
+      '<div class="editbox"><div class="edit-hint">直接修改，或整段貼上新版本（題幹一行、A) B) C) D) 選項各一行、最後一行 ANSWER: 字母）。Ctrl+Enter 儲存，Esc 取消。' +
+      ((state.questions[i].images || []).length ? '這一題的圖片會保留，不必處理。' : '') + '</div>' +
       '<textarea spellcheck="false"></textarea><div class="edit-err" hidden></div>' +
       '<div class="edit-actions"><button class="btn btn-primary edit-save" type="button">儲存</button><button class="btn btn-ghost edit-cancel" type="button">取消</button></div></div>';
     var ta = card.querySelector("textarea");
@@ -794,6 +882,7 @@
     var q = parsed.questions[0];
     q.edited = true;
     if (typeof state.questions[i].mark === "number") q.mark = state.questions[i].mark;
+    q.images = state.questions[i].images || []; // 編輯只改文字，原本的圖片保留
     state.questions[i] = q;
     render();
     showToast("第 " + (i + 1) + " 題已更新");
@@ -918,6 +1007,7 @@
 
   els.convertBtn.addEventListener("click", function(){
     var job;
+    imgStore = [];
     if (activeTab === "paste"){
       if (!pasteInput.value.trim()) return;
       job = Promise.resolve(textToLines(pasteInput.value));
@@ -952,10 +1042,11 @@
 
   // ---- copy / download ----
   els.copyBtn.addEventListener("click", function(){
-    var text = els.output.value;
+    var text = fullOutput;
     if (!text){ showToast("目前沒有勾選任何題目"); return; }
     var done = function(){ showToast("已複製到剪貼簿"); };
     var fail = function(){
+      if (els.output.value !== text){ showToast("含圖片的 XML 無法用這個方式複製，請改按下載"); return; }
       els.output.removeAttribute("readonly");
       els.output.focus();
       els.output.select();
@@ -971,7 +1062,7 @@
   });
 
   els.downloadBtn.addEventListener("click", function(){
-    var text = els.output.value;
+    var text = fullOutput;
     if (!text){ showToast("目前沒有勾選任何題目"); return; }
     var ext = fmt === "xml" ? ".xml" : ".txt";
     var filename = (fmt === "xml" ? "moodle" : "aiken") + (state.isSample ? "_範例" : "_轉換結果") + ext;
