@@ -58,7 +58,7 @@ function load() {
 }
 
 load();
-// 嵌入教學工具箱時：隱藏標題與分頁，直接開啟指定模組（?embed=1&m=1）
+// 嵌入你教了沒時：隱藏標題與分頁，直接開啟指定模組（?embed=1&m=1）
 const qs = new URLSearchParams(location.search);
 if (qs.get("embed")) document.body.classList.add("embed");
 if (qs.get("m") && MODULES[qs.get("m")]) mode = qs.get("m");

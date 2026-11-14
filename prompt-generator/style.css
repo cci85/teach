@@ -97,6 +97,6 @@ ol.outline { margin: 12px 0 0; padding: 8px 12px 8px 32px; background: var(--bg)
 ol.outline li { margin: 2px 0; }
 ol.outline li small { color: var(--muted); }
 
-/* 嵌入教學工具箱 */
+/* 嵌入你教了沒 */
 .embed .toolbox-back, .embed > header, .embed #tabs { display: none; }
 .embed main { padding-top: 16px; }
