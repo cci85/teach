@@ -252,7 +252,8 @@
     <div class="balancebar" id="balancebar">
       <span class="dist">答案分布（已選題目）：<span id="distText"></span></span>
       <label><input type="checkbox" id="autoBalance" checked> 轉換後自動平均分配</label>
-      <button class="btn-sm" type="button" id="balanceBtn">重新平均分配</button>
+      <button class="btn-sm" type="button" id="sortBtn" title="依題幹文字排序（含「(圖)」標記）">依題幹排序</button>
+      <button class="btn-sm" type="button" id="balanceBtn" title="題目順序隨機打亂，並重新平均分配答案位置">重新亂序</button>
     </div>
 
     <div class="pickbar" id="pickbar">
@@ -384,7 +385,7 @@
         problems.push({stem: stem, reason: "正確答案標的字母「" + q.answerLetter + "」對不上任何一個選項"});
         return;
       }
-      lastQ = {stem: stem, options: q.options.map(function(o){ return o.text.trim(); }), answerIndex: idx, images: q.images};
+      lastQ = {stem: stem, rawStem: stem, options: q.options.map(function(o){ return o.text.trim(); }), answerIndex: idx, images: q.images};
       questions.push(lastQ);
     }
 
@@ -653,6 +654,25 @@
     });
   }
 
+  // ---- 題目順序 ----
+  // 題目與勾選狀態一起重排；排序鍵用原始題幹（保留「(圖)」標記）
+  function reorder(idx){
+    var qs = state.questions, sel = selected;
+    state.questions = idx.map(function(i){ return qs[i]; });
+    selected = idx.map(function(i){ return sel[i]; });
+  }
+  function sortByStem(){
+    var key = function(q){ return (q.rawStem || q.stem).replace(/\s+/g, " ").trim(); };
+    var idx = state.questions.map(function(q, i){ return i; });
+    idx.sort(function(a, b){ return key(state.questions[a]).localeCompare(key(state.questions[b]), "zh-Hant") || a - b; });
+    reorder(idx);
+  }
+  function shuffleQuestions(){
+    var idx = state.questions.map(function(q, i){ return i; });
+    for (var j = idx.length - 1; j > 0; j--){ var r = Math.floor(Math.random() * (j + 1)); var t = idx[j]; idx[j] = idx[r]; idx[r] = t; }
+    reorder(idx);
+  }
+
   var fmt = "aiken";
   try { if (localStorage.getItem("aiken.fmt") === "xml") fmt = "xml"; } catch (e){}
   var userFmt = fmt; // 使用者自己點選的格式（會記住）；含圖時的自動切換不算
@@ -902,7 +922,10 @@
     renderSelection();
   });
   document.getElementById("balanceBtn").addEventListener("click", function(){
-    balanceAnswers(); render(); showToast("已依目前已選題目重新平均分配答案");
+    shuffleQuestions(); balanceAnswers(); render(); showToast("已重新亂序：題目順序打亂，答案位置重新平均分配");
+  });
+  document.getElementById("sortBtn").addEventListener("click", function(){
+    sortByStem(); render(); showToast("已依題幹文字排序");
   });
   var autoBalance = document.getElementById("autoBalance");
   try { if (localStorage.getItem("aiken.autoBalance") === "0") autoBalance.checked = false; } catch (e){}
